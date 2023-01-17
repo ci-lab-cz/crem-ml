@@ -15,9 +15,33 @@ pandas_table = NewType('Processed pandas table with id of compound and predicted
                       pd.DataFrame
                       )
 pandas_series_row = NewType('One row from pandas dataframe', pd.core.series.Series)
+def  prepare_fragments_table(in_files: List, parameters: List, alg_types: List) -> pandas_table:
+    """
+    Connect all input files from fragment contributions into one big table.
+
+    :param in_files: list of all contribution files
+    :param parameters: list of all parameters
+    :param alg_types: list of lists of all algs used for predictions
+    :return pandas dataframe [frag_id, compound, fragment, parameters*]
+    """
+
+    tables = []
+    for parameter, in_file,alg_type in zip(parameters, in_files, alg_types):  # over files
+
+        table = pd.read_table(in_file)
+        table.drop( 'Contribution_type', axis=1, inplace=True) # if only 'overall' exists, we can ignore it safely
+
+        table = table.pivot(index=["Compound", "Frag_id","Fragment"], columns='Model', values='Contribution_value')
+        # remove partial columns and compute average value
+        table[parameter]  = table[alg_type].mean(axis=1)
+        table.drop(alg_type, axis=1, inplace=True)
+
+        tables.append(table)
+        print(table.tail())
+    return pd.concat(tables, axis=1, join='inner').reset_index(inplace=False) # move idx cols to become cols
 
 
-def prepare_fragments_table(in_files: List, parameters: List, alg_types: List) -> pandas_table:
+def prepare_fragments_table_old(in_files: List, parameters: List, alg_types: List) -> pandas_table:
     """
     Connect all input files from fragment contributions into one big table.
 
@@ -57,6 +81,7 @@ def prepare_fragments_table(in_files: List, parameters: List, alg_types: List) -
         if i > 0:
             table.drop(['Compound', 'Fragment'], axis=1, inplace=True)
         tables.append(table)
+        print(table.tail())
 
     return pd.concat(tables, axis=1, join='inner')
 
@@ -84,7 +109,7 @@ def get_predicted_values_for_whole_compounds(in_file: str, parameters: List) -> 
 def compute_normalized_value(record: pandas_series_row, predictions: pandas_table,
                               parameter: str, threshold: List, range: int) -> float:
     """
-    It is applied on pandas dataframe row (which si Series). Calculates normalized
+    It is applied on pandas dataframe row (which is Series). Calculates normalized
     value according to threshold and predicted value of whole compound.
 
     :param record: pandas series, e.g. [Compound(ID), Fragment, parameters*]
@@ -94,7 +119,7 @@ def compute_normalized_value(record: pandas_series_row, predictions: pandas_tabl
     :param range: range of possible prediction
     :return: normalized value from predicted contribution
     """
-
+    # print("record", record)
     predicted_value = predictions.loc[record['Compound'], parameter]
     x = record[parameter]
 
@@ -122,7 +147,9 @@ def compute_normalized_value(record: pandas_series_row, predictions: pandas_tabl
 
 def main(in_sdf_f, in_contrib_f, out_frag_f, out_worst_f, parameters, ranges,
          types_of_alg, thresholds, n_worst, random_ratio=0, brute_force=False):
-
+    """
+    :param types_of_alg: list of "_"separated alg types to be used with each optimized parameter, e.g. [rf_gbm, rf_gbm]
+    """
     print('Processing contributions ...')
 
     n_random = math.floor(n_worst * random_ratio)
@@ -132,13 +159,15 @@ def main(in_sdf_f, in_contrib_f, out_frag_f, out_worst_f, parameters, ranges,
     thresholds = parse_threshold(thresholds)
 
     table = prepare_fragments_table(in_contrib_f, parameters, types_of_alg)
+    print(table.tail())
     predictions = get_predicted_values_for_whole_compounds(in_sdf_f, parameters)
 
-    for parameter, threshold, range in zip(parameters, thresholds, ranges):
-        table.apply(compute_normalized_value, predictions=predictions, parameter=parameter, threshold=threshold, range=range, axis=1)
-
-    table['Average'] = table.sum(axis=1) / len(parameters)
-
+    for parameter, threshold, rng in zip(parameters, thresholds, ranges):
+        print(table.loc[:,parameter])
+        table.loc[:,parameter] = table.apply(compute_normalized_value, axis=1, predictions=predictions, parameter=parameter, threshold=threshold, range=rng)
+    cols_to_ave = range(table.shape[1] - len(parameters),table.shape[1])
+    table['Average'] = table.iloc[:,cols_to_ave].sum(axis=1) / len(parameters)
+    print("after ave",table.tail())
     # prepare order of columns for fragment norm output
     order_cols = ['Compound', 'Frag_id', 'Fragment']
     order_cols.extend(parameters)
