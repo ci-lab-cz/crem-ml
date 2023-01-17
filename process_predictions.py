@@ -122,10 +122,10 @@ def prepare_working_arr(in_pred: List, parameters: List, bounded_box: bool) -> p
     """
     Reads file with predictions and process it into pandas table
 
-    :param in_pred: list of paths to files with all predictions
+    :param in_pred: list of paths to files with all predictions. Columns: 'Compounds', model0,model1,..,modeln,'consensus',	'bound_box'
     :param parameters: list of parameters to predict
     :param bounded_box: if True, then return only compounds within bounded box
-    :return: pandas table with processed predictions
+    :return: pandas table with prepared predictions (consensus pred for each parameter). Columns:'id', param0,param1,..,paramn
     """
 
     tables = [pd.read_table(file) for file in in_pred]

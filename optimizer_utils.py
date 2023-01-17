@@ -13,16 +13,16 @@ pandas_table = NewType('Processed pandas table with id of compound and predicted
                       pd.DataFrame
                       )
 
-sys.path.insert(1, os.path.join(sys.path[0], 'spci'))
-import calc_atomic_properties_chemaxon
-import predict
-import find_frags_auto_rdkit as find_frags
-import filter_descriptors
-import calc_frag_contrib as frag_contrib
+# sys.path.insert(1, os.path.join(sys.path[0], 'spci'))
+from spci import calc_atomic_properties_chemaxon
+from spci import predict
+from spci import find_frags_auto_rdkit as find_frags
+from spci import filter_descriptors
+from spci import calc_frag_contrib as frag_contrib
 
 
-sys.path.insert(1, os.path.join(sys.path[0], 'spci/sirms'))
-import sirms
+# sys.path.insert(1, os.path.join(sys.path[0], 'spci/sirms'))
+from sirms import sirms
 
 
 def save_output_poll(in_sdf: str, out_fname: str, output_poll: pandas_table) -> None:
@@ -305,7 +305,7 @@ def predict_properties(parameters: List, descriptors_fname: str, output_format: 
                             model_type=parameter['type_of_model'],
                             ad=['bound_box'],
                             verbose=False,
-                            title=parameter['name'])
+                            )
 
 def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
                      smarts_string: str, max_cuts: int, radius: List,
@@ -359,6 +359,7 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
                                  model_dir=model_dir,
                                  prop_names=properties_calc_contrib,
                                  model_type=model_type,
+                                 activity_file=None,
                                  verbose=False,
                                  save_pred=False,
                                  input_format=in_format,
