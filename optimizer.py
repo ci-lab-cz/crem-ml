@@ -139,7 +139,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                          settings['fragments_ids_file'],
                                          settings['smart_string'],
                                          settings['max_cuts'],
-                                         settings['radius'],
+                                         # settings['radius'], # todo is it safe to not to use it at all?
                                          settings['keep_stereo'],
                                          error_fname_frag)
 
@@ -187,6 +187,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                         settings['worst_fragments_file'],
                                         settings['fragments_ids_file'],
                                         settings['replacement_database'],
+                                        settings['radius'],
                                         new_compouds)
 
         settings['seed_structure'] = new_compouds
@@ -202,7 +203,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
 
 
 def main():
-    parser = argparse.ArgumentParser(description='System for designing new drugs')
+    parser = argparse.ArgumentParser(description='System for multiobjective optimization of small molecules properties')
     parser.add_argument('-i', '--input_config',
                         help='path to config with input settings')
     parser.add_argument('-bf', '--brute_force', action='store_true', default=False,

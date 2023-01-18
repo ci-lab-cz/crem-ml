@@ -308,7 +308,7 @@ def predict_properties(parameters: List, descriptors_fname: str, output_format: 
                             )
 
 def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
-                     smarts_string: str, max_cuts: int, radius: List,
+                     smarts_string: str, max_cuts: int,
                      keep_stereo: bool, error_fname: str,
                      verbose: bool=False) -> None:
     """
@@ -318,7 +318,6 @@ def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
     :param fragment_ids_file: name of output file with fragment ids
     :param smarts_string: ******NOT SURE******
     :param max_cuts: ******NOT SURE******
-    :param radius: ******NOT SURE******
     :param keep_stereo: ******NOT SURE******
     :param: error_fname: path to log file from this function
     :param verbose: false default
@@ -329,7 +328,7 @@ def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
                                 out_txt=fragment_ids_file,
                                 query=smarts_string,
                                 max_cuts=max_cuts,
-                                radius = radius,
+                                radius = [0], # todo is it safe to hardcode this arg?
                                 keep_stereo = keep_stereo,
                                 verbose=verbose,
                                 error_fname=error_fname)

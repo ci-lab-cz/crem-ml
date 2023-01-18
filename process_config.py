@@ -90,7 +90,7 @@ def test_config(input_config: str) -> Dict:
 
     with open(input_config, 'r') as stream:
         try:
-            config = yaml.load(stream)
+            config = yaml.load(stream, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:
             print(exc)
 
@@ -109,6 +109,7 @@ def test_config(input_config: str) -> Dict:
                 config[key] = value
         # check param
         elif "param_" in key:
+            print(key,value)
             # check if models dir exists
             assert exists(config[key]['path']), "{} doesn't exists".format(config[key]['path'])
             # check if types of models exists, e.g. model + type + ".pkl"
@@ -149,8 +150,5 @@ def test_config(input_config: str) -> Dict:
         assert isinstance(num, int), "number_of_selected_compounds are not defined properly"
         config['number_of_selected_compounds'] = num
 
-    # radius must be in list format
-    if not isinstance(config['radius'], list):
-        config['radius'] = [config['radius']]
 
     return config
