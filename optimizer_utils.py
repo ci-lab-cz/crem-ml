@@ -15,6 +15,7 @@ pandas_table = NewType('Processed pandas table with id of compound and predicted
 
 # sys.path.insert(1, os.path.join(sys.path[0], 'spci'))
 from spci import calc_atomic_properties_chemaxon
+from spci import descriptors
 from spci import predict
 from spci import find_frags_auto_rdkit as find_frags
 from spci import filter_descriptors
@@ -224,10 +225,47 @@ def calculate_atomic_prop(input_sdf_file: str, chemaxon_path: str, properties: L
                                                 os.path.join(chemaxon_path, 'cxcalc'))
     return lbl_sdf
 
+
+# noinspection PyStatementEffect
+
+def calculate_fingerprints(input_sdf_file: str,
+                            fingerprint_type: str, output_format: str,
+                            fragments_ids=None, id_field_name: str = 'ID') -> None:
+    """
+    Create files with RDKIT fingerprints. Encoded as: ECFP4='MG2', atom pair fingerprint='AP', rdkit fingerprint: 'RDK',
+    topological torsions: TT; binary (hashed) versions  are specified with 'b' prefix, e.g. 'bAP'.
+
+    :param input_sdf_file: path to standardized and labeled sdf file
+    :param fingerprint_type: str  fingerprints to calculate e.g. 'bAP','MG2'
+    :param output_format: svm
+    :param fragments_ids: if specified, use fragments ids
+    :param id_field_name: specifies name of parameter in which is id of mol saved
+    """
+
+    print("Descriptors calculation started. Please wait it can take some time")
+
+    # define output files
+    if fragments_ids is not None:
+        x_fname = os.path.join(os.path.dirname(input_sdf_file), 'new_x.txt')
+    else:
+        x_fname = os.path.join(os.path.dirname(input_sdf_file), 'x.txt')
+
+    descriptors.main_params(  in_fname=input_sdf_file,    # input
+                          out_fname=x_fname,        # output
+
+                          opt_verbose=False,
+                          opt_noH=True,
+                          frag_fname=fragments_ids,
+                          per_atom_fragments=False,
+                          id_field_name=id_field_name,
+                          output_format=output_format,
+                          get_fp=fingerprint_type)
+
+
 def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
                                 properties: List, output_format: str,
                                 n_cores: int, copy_setup: bool = True,
-                                fragments_fname=None, id_field_name: str = 'ID') -> None:
+                                fragments_ids=None, id_field_name: str = 'ID') -> None:
     """
     Create files with descriptors
 
@@ -237,7 +275,7 @@ def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
     :param output_format: svm
     :param n_cores: number of cores for computing
     :param copy_setup: if specified, copy setup file to output directory
-    :param fragments_fname: if specified, use fragments ids
+    :param fragments_ids: if specified, use fragments ids
     :param id_field_name: specifies name of parameter in which is id of mol saved
     """
 
@@ -250,7 +288,7 @@ def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
                         )
 
     # define output files
-    if fragments_fname is not None:
+    if fragments_ids is not None:
         x_fname = os.path.join(os.path.dirname(input_sdf_file), 'new_x.txt')
     else:
         x_fname = os.path.join(os.path.dirname(input_sdf_file), 'x.txt')
@@ -270,7 +308,7 @@ def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
                       opt_mix_ordered=False,
                       opt_verbose=False,
                       opt_noH=True,
-                      frag_fname=fragments_fname,
+                      frag_fname=fragments_ids,
                       per_atom_fragments=False,
                       self_association_mix=False,
                       reaction_diff=False,

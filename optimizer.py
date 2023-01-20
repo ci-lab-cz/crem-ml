@@ -80,21 +80,28 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
             std_rules_path=settings['std_rules'],
             chemaxon_path=settings['chemaxon']
         )
+        if settings['descriptors_type'] == 'sirms':
+            # calc atomic properties
+            settings['seed_structure'] = optimizer_utils.calculate_atomic_prop(
+                input_sdf_file=settings['seed_structure'],
+                chemaxon_path=settings['chemaxon'],
+                properties=settings['properties_chemaxon']
+            )
+            # calculation of sirms descriptors
+            optimizer_utils.calculate_sirms_descriptors(settings['seed_structure'],
+                                        settings['setup_file'],
+                                        settings['properties_sirms'],
+                                        settings['output_format'],
+                                        settings['n_cores']
+                                        )
+        else:
+            # calculation of  fingerprints  specified in config
+            optimizer_utils.calculate_fingerprints(settings['seed_structure'],
 
-        # calc atomic properties
-        settings['seed_structure'] = optimizer_utils.calculate_atomic_prop(
-            input_sdf_file=settings['seed_structure'],
-            chemaxon_path=settings['chemaxon'],
-            properties=settings['properties_chemaxon']
-        )
+                                                   settings['descriptors_type'],
+                                                   settings['output_format'],
 
-        # calculation of sirms descriptors
-        optimizer_utils.calculate_sirms_descriptors(settings['seed_structure'],
-                                    settings['setup_file'],
-                                    settings['properties_sirms'],
-                                    settings['output_format'],
-                                    settings['n_cores']
-                                    )
+                                                        )
         fragments_fname = os.path.join(generation_dir, 'x.txt')
 
         # predict properties of std_lbl_sdf file
@@ -142,15 +149,23 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                          # settings['radius'], # todo is it safe to not to use it at all?
                                          settings['keep_stereo'],
                                          error_fname_frag)
+        if settings['descriptors_type'] == 'sirms':
+            # calculate sirms descriptors of fragments
+            optimizer_utils.calculate_sirms_descriptors(settings['processed_predictions_file'],
+                                        settings['setup_file'],
+                                        settings['properties_sirms'],
+                                        settings['output_format'],
+                                        settings['n_cores'],
+                                        fragments_ids=settings['fragments_ids_file']
+                                        )
+        else:
+            # calculation of  fingerprints  specified in config
+            optimizer_utils.calculate_fingerprints(settings['seed_structure'],
 
-        # calculate sirms descriptors of fragments
-        optimizer_utils.calculate_sirms_descriptors(settings['processed_predictions_file'],
-                                    settings['setup_file'],
-                                    settings['properties_sirms'],
-                                    settings['output_format'],
-                                    settings['n_cores'],
-                                    fragments_fname=settings['fragments_ids_file']
-                                    )
+                                                   settings['descriptors_type'],
+                                                   settings['output_format'],
+                                                   fragments_ids=settings['fragments_ids_file']
+                                                   )
         new_fragments_fname = os.path.join(generation_dir, 'new_x.txt')
 
         # calculate fragments contributions

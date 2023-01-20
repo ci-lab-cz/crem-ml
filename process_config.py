@@ -18,6 +18,7 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['seed_structure', 'path_to_seed_structure'],
                     ['number_of_selected_compounds', 'fill only if desirability is specified'],
                     ['random_compounds_selection', '0'],  # from 0 - 1, 0.2 means 20% of selected compounds are chosen randomly (floored)
+                    ['descriptors_type','type of descriptors to use'],
                     ['bounded_box', 'True or False'],     # True
                     ['properties_chemaxon', 'fill'],      # 'charge logp acc don refractivity'
                     ['properties_sirms', 'fill'],         # 'CHARGE LOGP HB REFRACTIVITY'
@@ -140,7 +141,11 @@ def test_config(input_config: str) -> Dict:
         elif (key == 'properties_chemaxon') or (key == 'properties_sirms') \
             or (key == 'optimization_methods') or (key == 'properties_calc_contrib'):
             config[key] = value.split(" ")
-
+    if 'sirms' not in config['descriptors_type']:
+        print( "Note, 'properties_chemaxon' and 'properties_sirms' have no effect for descriptors specified, "
+               "they are meaningful only for sirms")
+    acceptable_descr = [ 'sirms','MG2','AP','RDK','TT','bMG2','bAP','bRDK']
+    assert sum([config['descriptors_type'] == i for i in acceptable_descr]) == 1
     # if user specify desirabilty then user must specify number of selected of compounds
     if 'desirability' in config['optimization_methods']:
         try:
