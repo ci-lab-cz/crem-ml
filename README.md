@@ -99,6 +99,8 @@ all fragments are selected using optimization technique
 + n_cores - number of cores used for calculation of descriptors
 + optimization_method - list of selected optimization methods, e.g. desirability,
 pareto
++ descriptors_type - one of: MG2, bMG2 (Morgan radius 2),AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint),
+TT (topological torsion). Prefix b means binary fingerprint of length 2048. Models should be built using same desciptors.
 + store_all_files - (True/False) specifies if you want to store or delete
 intermediate files used for calculations within generations
 + Parameter(s)

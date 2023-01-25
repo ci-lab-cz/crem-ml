@@ -23,7 +23,7 @@ def read_worst_and_ids(input_worst, input_ids):
         f_worst.readline()
         for line in f_worst:
             line = line.split('\t')
-            frag_core = line[2].split('|')[0] # take only core (in case there is some context after '|')
+            frag_core = line[2].split('|')[0] # take only core (in case there is some context after '|'; no need in env)
             d[int(line[1])] = line[:2] + [frag_core]
 
     # prepare list of ids and connect them with fragments
