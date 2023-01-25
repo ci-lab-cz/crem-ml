@@ -305,7 +305,7 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
 
         update_database(out_database, prepare_working_arr(in_pred, parameters, False), output_filtering)
 
-        # set order of methods
+        # set order of methods # todo:  unable using both methods squentiaally! allow only  one  (or change the logic)
         if 'desirability' in optimization_methods and 'pareto' in optimization_methods and len(optimization_methods) == 2:
             optimization_methods = ['pareto', 'desirability']
 

@@ -224,7 +224,7 @@ def main():
     parser.add_argument('-bf', '--brute_force', action='store_true', default=False,
                         help='use all compounds and all fragments, no selections')
     parser.add_argument('-g', '--number_generations', action='store', type=int, default=0,
-                        help='specifies number of generations, use with brute force')
+                        help='specifies number of generations, use with brute force') # todo  why we need it here?
     parser.add_argument('-n', '--n_params', action='store', type=int,
                         help='specifies number of parameters to optimize, use with definition of config structure')
     parser.add_argument('-d', '--define_config_structure', action='store_true', default=False,

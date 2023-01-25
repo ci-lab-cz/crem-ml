@@ -335,6 +335,7 @@ def predict_properties(parameters: List, descriptors_fname: str, output_format: 
         print("Prediction for {} started".format(parameter['name']))
         output_file_name = os.path.join(os.path.dirname(descriptors_fname),
                                         'predictions_{}.txt'.format(parameter['name']))
+
         predict.main_params(x_fname=descriptors_fname,
                             input_format=output_format,
                             out_fname=output_file_name,
@@ -388,6 +389,8 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
     """
 
     for parameter, type_of_alg, model_dir, model_type in zip(parameters, types_of_alg, models_dir, models_type):
+        # todo : need abiltiy of handling chunks in sirmsfile - for cases when too few frags were generated,  we need higher value
+
         print("Fragment contribution for {} started".format(parameter))
         frag_contrib.main_params(x_fname=x_fname,
                                  out_fname=os.path.join(os.path.dirname(x_fname),
