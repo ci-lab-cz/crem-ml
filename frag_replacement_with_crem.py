@@ -35,7 +35,7 @@ def read_worst_and_ids(input_worst, input_ids):
     return list(d.values())
 
 
-def make_replacements(input_sdf, input_worst, input_ids, path_to_db,radius):
+def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores):
     new_products = []
     id_mol = 0
     compounds = Chem.SDMolSupplier(input_sdf, removeHs=False, sanitize=True)
@@ -48,9 +48,9 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db,radius):
                 bad_mol_name, bad_frag_id = frag[0], list(frag[-1])
                 if mol_id == bad_mol_name:
                     out = mutate_mol(
-                        mol,
-                        path_to_db,
-                        radius,
+                        mol=mol,
+                        db_name=path_to_db,
+                        radius=radius,
                         min_size=0,
                         max_size=10,
                         min_rel_size=0,
@@ -63,7 +63,7 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db,radius):
                         protected_ids=None,
                         symmetry_fixes=False,
                         return_rxn=True,
-                        ncores=1,
+                        ncores=ncores,
                         return_rxn_freq=False,
                         return_mol=False,
                         replace_ids=bad_frag_id
@@ -80,11 +80,11 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db,radius):
     return new_products
 
 
-def main(input_sdf, input_worst, input_ids, path_to_db, radius, output_product_file):
+def main(input_sdf, input_worst, input_ids, path_to_db, radius, output_product_file, ncores):
 
     print('Replacing fragments ...')
 
-    products = make_replacements(input_sdf, input_worst, input_ids, path_to_db,radius)
+    products = make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores)
     w = Chem.SDWriter(output_product_file)
     for m in products: w.write(m)
     w.close()
@@ -102,8 +102,10 @@ if __name__ == '__main__':
                         help='path to the database with fragment replacements')
     parser.add_argument('-oc', '--out_compounds', metavar='new_compounds.sdf', required=True,
                         help='file name where you want to store new compounds')
+    parser.add_argument('-c', '--ncores', metavar='number_of_cores', default=1,
+                        help='number of cpu cores used.')
 
     args = vars(parser.parse_args())
 
     main(args['in_sdf'], args['in_worst'], args['in_ids'],
-         args['in_con'], args['radius'], args['out_compounds'])
+         args['in_con'], args['radius'], args['out_compounds'],args['ncores'])

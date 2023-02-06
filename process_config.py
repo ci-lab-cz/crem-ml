@@ -110,7 +110,6 @@ def test_config(input_config: str) -> Dict:
                 config[key] = value
         # check param
         elif "param_" in key:
-            print(key,value)
             # check if models dir exists
             assert exists(config[key]['path']), "{} doesn't exists".format(config[key]['path'])
             # check if types of models exists, e.g. model + type + ".pkl"
@@ -141,7 +140,7 @@ def test_config(input_config: str) -> Dict:
         elif (key == 'properties_chemaxon') or (key == 'properties_sirms') \
             or (key == 'optimization_methods') or (key == 'properties_calc_contrib'):
             config[key] = value.split(" ")
-    if 'sirms' not in config['descriptors_type']:
+    if 'sirms' not in config['descriptors_type'] and ('properties_chemaxon' in config  or 'properties_sirms' in config):
         print( "Note, 'properties_chemaxon' and 'properties_sirms' have no effect for descriptors specified, "
                "they are meaningful only for sirms")
     acceptable_descr = [ 'sirms','MG2','AP','RDK','TT','bMG2','bAP','bRDK']

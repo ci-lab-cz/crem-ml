@@ -15,9 +15,11 @@ pandas_table = NewType('Processed pandas table with id of compound and predicted
                       pd.DataFrame
                       )
 pandas_series_row = NewType('One row from pandas dataframe', pd.core.series.Series)
+
+
 def  prepare_fragments_table(in_files: List, parameters: List, alg_types: List) -> pandas_table:
     """
-    Connect all input files from fragment contributions into one big table.
+    Collect all input files from fragment contributions into one big table.
 
     :param in_files: list of all contribution files
     :param parameters: list of all parameters

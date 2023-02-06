@@ -94,9 +94,9 @@ optimization technique and\or randomly (see random_fragments_selection)
 for one compound in one generation, 1 - completely random selection, 0 -
 all fragments are selected using optimization technique
 + max_frag_size - maximum size of fragment, currently has no effect
-+ output_format - ***** defines output format, svm (what does it mean?)
++ output_format - defines output format, svm or txt for the file with descriptors.
 + num_of_generation - maximum number of generations
-+ n_cores - number of cores used for calculation of descriptors
++ n_cores - number of cores used for calculation of descriptors and  in CReM replacement.
 + optimization_method - list of selected optimization methods, e.g. desirability,
 pareto
 + descriptors_type - one of: MG2, bMG2 (Morgan radius 2),AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint),

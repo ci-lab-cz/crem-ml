@@ -97,7 +97,6 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
         else:
             # calculation of  fingerprints  specified in config
             optimizer_utils.calculate_fingerprints(settings['seed_structure'],
-
                                                    settings['descriptors_type'],
                                                    settings['output_format'],
 
@@ -161,7 +160,6 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
         else:
             # calculation of  fingerprints  specified in config
             optimizer_utils.calculate_fingerprints(settings['seed_structure'],
-
                                                    settings['descriptors_type'],
                                                    settings['output_format'],
                                                    fragments_ids=settings['fragments_ids_file']
@@ -203,7 +201,8 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                         settings['fragments_ids_file'],
                                         settings['replacement_database'],
                                         settings['radius'],
-                                        new_compouds)
+                                        new_compouds,
+                                        settings['n_cores'])
 
         settings['seed_structure'] = new_compouds
 

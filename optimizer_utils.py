@@ -238,7 +238,7 @@ def calculate_fingerprints(input_sdf_file: str,
     :param input_sdf_file: path to standardized and labeled sdf file
     :param fingerprint_type: str  fingerprints to calculate e.g. 'bAP','MG2'
     :param output_format: svm
-    :param fragments_ids: if specified, use fragments ids
+    :param fragments_ids: path to file with frag_ids; if specified, use fragments ids
     :param id_field_name: specifies name of parameter in which is id of mol saved
     """
 
@@ -275,7 +275,7 @@ def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
     :param output_format: svm
     :param n_cores: number of cores for computing
     :param copy_setup: if specified, copy setup file to output directory
-    :param fragments_ids: if specified, use fragments ids
+    :param fragments_ids: path to frag_ids file; if specified, use fragments ids
     :param id_field_name: specifies name of parameter in which is id of mol saved
     """
 
