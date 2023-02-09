@@ -139,6 +139,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
             sys.exit()
 
         # find fragments
+
         settings['fragments_ids_file'] = os.path.join(generation_dir, 'fragments_ids.txt')
         error_fname_frag = os.path.join(generation_dir, 'fragments_log.log')
         optimizer_utils.find_frags_rdkit(settings['processed_predictions_file'],
@@ -195,14 +196,17 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
 
         # replace fragments
         new_compouds = os.path.join(generation_dir, '{}_gen_compounds.sdf'.format(gen))
-
+        if 'protected_ids' not in settings:
+            settings['protected_ids'] = None
+        print(settings['protected_ids'])
         frag_replacement.main(settings['processed_predictions_file'],
                                         settings['worst_fragments_file'],
                                         settings['fragments_ids_file'],
                                         settings['replacement_database'],
                                         settings['radius'],
                                         new_compouds,
-                                        settings['n_cores'])
+                                        settings['n_cores'],
+                                        settings['protected_ids'])
 
         settings['seed_structure'] = new_compouds
 

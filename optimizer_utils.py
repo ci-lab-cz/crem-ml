@@ -262,6 +262,21 @@ def calculate_fingerprints(input_sdf_file: str,
                           get_fp=fingerprint_type)
 
 
+def get_child_protected_atom_ids(mol, protected_parent_ids):
+    '''
+    :param mol:
+    :param protected_parent_ids: list[int]
+    :type  protected_parent_ids: list[int]
+    :return: sorted list of integers
+    '''
+    # After RDKit reaction procedure there is a field <react_atom_idx> with initial parent atom idx in product mol
+    protected_product_ids = []
+    for a in mol.GetAtoms():
+        if a.HasProp('react_atom_idx') and int(a.GetProp('react_atom_idx')) in protected_parent_ids:
+            protected_product_ids.append(a.GetIdx())
+    return sorted(protected_product_ids)
+
+
 def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
                                 properties: List, output_format: str,
                                 n_cores: int, copy_setup: bool = True,

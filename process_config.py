@@ -19,11 +19,13 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['number_of_selected_compounds', 'fill only if desirability is specified'],
                     ['random_compounds_selection', '0'],  # from 0 - 1, 0.2 means 20% of selected compounds are chosen randomly (floored)
                     ['descriptors_type','type of descriptors to use'],
-                    ['bounded_box', 'True or False'],     # True
-                    ['properties_chemaxon', 'fill'],      # 'charge logp acc don refractivity'
-                    ['properties_sirms', 'fill'],         # 'CHARGE LOGP HB REFRACTIVITY'
+                    ['bounded_box', 'True or False'],  # True
+                    ['properties_chemaxon', 'fill'],  # 'charge logp acc don refractivity'
+                    ['properties_sirms', 'fill'],  # 'CHARGE LOGP HB REFRACTIVITY'
                     ['properties_calc_contrib', 'fill'],  # 'overall'
                     ['smart_string', "'[#6+0;!$(*=,#[!#6])]!@!=!#[*]'"],
+                    ['protected_ids', 'protected_ids'],
+                    # field in seed sdf, containing atom ids that should not be touched by replacements (default name, or specify as arg)
                     ['max_cuts', 'fill'],
                     ['radius', 'fill'],
                     ['keep_stereo', 'True or False'],
@@ -34,8 +36,8 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['output_format', 'svm'],
                     ['num_of_generation', 'fill'],
                     ['n_cores', 'fill'],
-                    ['optimization_methods', 'fill'],     # 'pareto desirability'
-                    ['store_all_files', 'True or False']          # If false, it deletes all temp files, only db will be stored
+                    ['optimization_methods', 'fill'],  # 'pareto desirability'
+                    ['store_all_files', 'True or False']  # If false, it deletes all temp files, only db will be stored
                     ]
 
 PARAMETER_STRUCTURE = [['name', 'name_of_parameter'],

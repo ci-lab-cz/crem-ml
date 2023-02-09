@@ -2,7 +2,7 @@ import sys
 import argparse
 from collections import OrderedDict
 from crem.crem import mutate_mol
-
+from optimizer_utils import  get_child_protected_atom_ids  # todo import from parent module
 import numpy as np
 from rdkit import Chem
 
@@ -35,15 +35,21 @@ def read_worst_and_ids(input_worst, input_ids):
     return list(d.values())
 
 
-def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores):
+def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores, prot_ids=None):
     new_products = []
     id_mol = 0
     compounds = Chem.SDMolSupplier(input_sdf, removeHs=False, sanitize=True)
     list_of_fragments = read_worst_and_ids(input_worst, input_ids)
 
     for mol in compounds:
+        # print(Chem.MolToMolBlock(mol))
         try:
             mol_id = str(mol.GetProp('ID'))
+            if prot_ids is not None:
+                protected_ids = list(map(int, mol.GetProp(prot_ids).split(',')))
+            else:
+                protected_ids = prot_ids
+            print(protected_ids)
             for frag in list_of_fragments:
                 bad_mol_name, bad_frag_id = frag[0], list(frag[-1])
                 if mol_id == bad_mol_name:
@@ -60,33 +66,40 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, nco
                         min_inc=-2,
                         max_inc=2,
                         min_freq=0,
-                        protected_ids=None,
+                        protected_ids=protected_ids,
                         symmetry_fixes=False,
                         return_rxn=True,
                         ncores=ncores,
                         return_rxn_freq=False,
-                        return_mol=False,
+                        return_mol=True,
                         replace_ids=bad_frag_id
+
                     )
 
-                    for new_smile, transformation in out:
-                        new_mol = Chem.MolFromSmiles(new_smile)
+                    for new_smile, transformation, molobj in out:
+                        # new_mol = Chem.MolFromSmiles(new_smile)
+                        new_mol = molobj
                         new_mol.SetProp('parent_name', bad_mol_name)
                         new_mol.SetProp('transformation', transformation)
-                        new_products.append(new_mol)
+                        if prot_ids is not None:
+                            new_mol.SetProp('protected_ids',','.join(map(str,get_child_protected_atom_ids(molobj, protected_ids))))
+                        new_products.append( new_mol)
+                        print(Chem.MolToMolBlock(new_mol))
+
+
         except:
             pass
 
     return new_products
 
 
-def main(input_sdf, input_worst, input_ids, path_to_db, radius, output_product_file, ncores):
+def main(input_sdf, input_worst, input_ids, path_to_db, radius, output_product_file, ncores,prot_ids):
 
     print('Replacing fragments ...')
 
-    products = make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores)
+    products = make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores,prot_ids)
     w = Chem.SDWriter(output_product_file)
-    for m in products: w.write(m)
+    for m in products: print(Chem.MolToMolBlock(m)); w.write(m)
     w.close()
 
 if __name__ == '__main__':
@@ -108,4 +121,4 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     main(args['in_sdf'], args['in_worst'], args['in_ids'],
-         args['in_con'], args['radius'], args['out_compounds'],args['ncores'])
+         args['in_con'], args['radius'], args['out_compounds'],args['ncores'], args['prot_ids'])
