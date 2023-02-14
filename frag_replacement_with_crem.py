@@ -6,6 +6,7 @@ from optimizer_utils import  get_child_protected_atom_ids  # todo import from pa
 import numpy as np
 from rdkit import Chem
 
+np.random.seed(1)
 
 def read_worst_and_ids(input_worst, input_ids):
     """
@@ -82,9 +83,8 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, nco
                         new_mol.SetProp('parent_name', bad_mol_name)
                         new_mol.SetProp('transformation', transformation)
                         if prot_ids is not None:
-                            new_mol.SetProp('protected_ids',','.join(map(str,get_child_protected_atom_ids(molobj, protected_ids))))
+                            new_mol.SetProp('protected_ids',','.join(map(str,get_child_protected_atom_ids(new_mol, protected_ids))))
                         new_products.append( new_mol)
-                        print(Chem.MolToMolBlock(new_mol))
 
 
         except:
@@ -96,10 +96,10 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, nco
 def main(input_sdf, input_worst, input_ids, path_to_db, radius, output_product_file, ncores,prot_ids):
 
     print('Replacing fragments ...')
-
     products = make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores,prot_ids)
     w = Chem.SDWriter(output_product_file)
-    for m in products: print(Chem.MolToMolBlock(m)); w.write(m)
+    for m in products:
+        w.write(m)
     w.close()
 
 if __name__ == '__main__':

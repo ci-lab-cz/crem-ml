@@ -95,7 +95,7 @@ def add_mols_into_db(input_sdf: str, database: str, gen: int) -> int:
     num_of_compounds = 0
 
     # get generator of mols in sdf file
-    supplier = Chem.SDMolSupplier(input_sdf)
+    supplier = Chem.SDMolSupplier(input_sdf,removeHs=False)
 
     new_sdf_path = os.path.join(os.path.dirname(input_sdf), 'tmp.sdf')
     new_sdf = Chem.SDWriter(new_sdf_path)
