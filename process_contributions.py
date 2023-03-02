@@ -99,7 +99,8 @@ def get_predicted_values_for_whole_compounds(in_file: str, parameters: List) -> 
 
     predicted_values = []
     record = {}
-    compounds = Chem.SDMolSupplier(in_file, sanitize=False)
+    compounds = Chem.SDMolSupplier(in_file, removeHs=False,
+                                   sanitize=False)
     for mol in compounds:
         record['Compound'] = mol.GetProp('ID')
         for parameter in parameters:

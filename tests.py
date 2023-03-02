@@ -32,9 +32,9 @@ def main():
                         help='use all compounds and all fragments, no selections')
     parser.add_argument('-g', '--number_generations', action='store', type=int, default=0,
                         help='specifies number of generations, use with brute force')
-    parser.add_argument('-dt', '--descriptors_type', nargs='*', default=['MG2', 'sirms',],
+    parser.add_argument('-dt', '--descriptors_type', nargs='*', default=['MG2', 'AP',],
                         help='descriptor types')
-    parser.add_argument('-r', '--radius', nargs='*', default=[3,2],
+    parser.add_argument('-r', '--radius', nargs='*', default=[1],
                         help='radius for replacements')
     parser.add_argument('-o', '--opt_met', default=['desirability','pareto'],
                         help='optimization method')

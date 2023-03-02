@@ -5,43 +5,69 @@ from crem.crem import mutate_mol
 from optimizer_utils import  get_child_protected_atom_ids  # todo import from parent module
 import numpy as np
 from rdkit import Chem
+from  sirms.files import LoadFragments
+import pandas  as pd
 
 np.random.seed(1)
 
+# def read_worst_and_ids(input_worst, input_ids):
+#     """
+#     Prepare list of fragments with their ids
+#     :param input_worst: file name of selected fragments
+#     :param input_ids: file name with fragment ids
+#     :return: list of fragments with ids, e.g. [[compound_id, fragment_id, core, env, (fragment_ids)], [...], ...]
+#     """
+#
+#     list_of_fragments = []
+#     d = OrderedDict()
+#
+#     # prepare list of the worst fragments
+#     with open(input_worst, 'r') as f_worst:
+#         f_worst.readline()
+#         for line in f_worst:
+#             line = line.split('\t')
+#             frag_core = line[2].split('|')[0]
+#             d[int(line[1])] = line[:2] + [frag_core]
+#
+#     # prepare list of ids and connect them with fragments
+#     with open(input_ids, 'r') as f_ids:
+#         for i, line in enumerate(f_ids):
+#             line = line.strip().split('\t')
+#             if i in d:
+#                 d[i].append(tuple(j-1 for j in map(int, line[2:])))
+#     return list(d.values())
+
 def read_worst_and_ids(input_worst, input_ids):
     """
-    Prepare list of fragments with their ids
+    Prepare dataframe of fragments with their ids
     :param input_worst: file name of selected fragments
     :param input_ids: file name with fragment ids
-    :return: list of fragments with ids, e.g. [[compound_id, fragment_id, core, env, (fragment_ids)], [...], ...]
+    :return: pd.df of fragments with ids, columns: Compound,Frag_id,Fragment,Average,ids (atom ids)
     """
 
-    list_of_fragments = []
-    d = OrderedDict()
 
-    # prepare list of the worst fragments
-    with open(input_worst, 'r') as f_worst:
-        f_worst.readline()
-        for line in f_worst:
-            line = line.split('\t')
-            frag_core = line[2].split('|')[0] # take only core (in case there is some context after '|'; no need in env)
-            d[int(line[1])] = line[:2] + [frag_core]
+    d = pd.read_csv(input_worst, sep="\t")
+    d["Fragment"] = d["Fragment"].apply(lambda x: x.split('|')[0]) # take only core (in case there is some context after '|'; no need in env)
 
-    # prepare list of ids and connect them with fragments
-    with open(input_ids, 'r') as f_ids:
-        for i, line in enumerate(f_ids):
-            line = line.strip().split('\t')
-            if i in d:
-                d[i].append(tuple(j-1 for j in map(int, line[2:])))
-    return list(d.values())
+    f_ids = LoadFragments(input_ids)
+    f_ids = pd.json_normalize(f_ids, sep='#').transpose() # squash keys of nested dicts
+    # print(f_ids.tail())
+    f_ids[0]  = f_ids[0].apply(lambda i: [int(x)-1 for x in i]) # turn 1based (spci style) to 0based (rdkit style)
+    # print(f_ids.tail())
+
+    f_ids["Compound"]  = [x.split("#")[0] for x in f_ids.index]
+    f_ids["Frag_id"]  = [int(x.split("#")[-1]) for x in f_ids.index] # frag id of given fragment in given molecule
+    f_ids.columns = ['ids','Compound','Frag_id']
+
+    return pd.merge(d, f_ids, how='inner')
 
 
 def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores, prot_ids=None):
     new_products = []
     id_mol = 0
     compounds = Chem.SDMolSupplier(input_sdf, removeHs=False, sanitize=True)
-    list_of_fragments = read_worst_and_ids(input_worst, input_ids)
-
+    df_of_fragments = read_worst_and_ids(input_worst, input_ids)
+    print(df_of_fragments)
     for mol in compounds:
         # print(Chem.MolToMolBlock(mol))
         try:
@@ -50,11 +76,15 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, nco
                 protected_ids = list(map(int, mol.GetProp(prot_ids).split(',')))
             else:
                 protected_ids = prot_ids
-            print(protected_ids)
-            for frag in list_of_fragments:
-                bad_mol_name, bad_frag_id = frag[0], list(frag[-1])
-                if mol_id == bad_mol_name:
-                    out = mutate_mol(
+            # print(protected_ids)
+            for row in df_of_fragments.loc[df_of_fragments.Compound ==mol_id ,:].iterrows():
+                bad_mol_name, bad_frag_id = row[1].Compound, row[1].ids  # molid and atom ids
+                print(bad_frag_id , bad_mol_name , row[1].Frag_id)
+
+
+                # print(Chem.MolToMolBlock(mol))
+                # print(protected_ids )
+                out = mutate_mol(
                         mol=mol,
                         db_name=path_to_db,
                         radius=radius,
@@ -77,7 +107,7 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, nco
 
                     )
 
-                    for new_smile, transformation, molobj in out:
+                for new_smile, transformation, molobj in out:
                         # new_mol = Chem.MolFromSmiles(new_smile)
                         new_mol = molobj
                         new_mol.SetProp('parent_name', bad_mol_name)
