@@ -204,6 +204,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                         settings['fragments_ids_file'],
                                         settings['replacement_database'],
                                         settings['radius'],
+                                        settings['max_frag_size'],  # todo: what frag? hac or all?
                                         new_compouds,
                                         settings['n_cores'],
                                         settings['protected_ids'])

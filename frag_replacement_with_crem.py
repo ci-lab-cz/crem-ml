@@ -62,7 +62,7 @@ def read_worst_and_ids(input_worst, input_ids):
     return pd.merge(d, f_ids, how='inner')
 
 
-def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores, prot_ids=None):
+def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, max_size, ncores, prot_ids=None):
     new_products = []
     id_mol = 0
     compounds = Chem.SDMolSupplier(input_sdf, removeHs=False, sanitize=True)
@@ -89,7 +89,7 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, nco
                         db_name=path_to_db,
                         radius=radius,
                         min_size=0,
-                        max_size=10,
+                        max_size=max_size,
                         min_rel_size=0,
                         max_rel_size=1,
                         max_replacements=None,
@@ -123,10 +123,10 @@ def make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, nco
     return new_products
 
 
-def main(input_sdf, input_worst, input_ids, path_to_db, radius, output_product_file, ncores,prot_ids):
+def main(input_sdf, input_worst, input_ids, path_to_db, radius,max_size,  output_product_file, ncores,prot_ids):
 
     print('Replacing fragments ...')
-    products = make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius, ncores,prot_ids)
+    products = make_replacements(input_sdf, input_worst, input_ids, path_to_db, radius,max_size, ncores,prot_ids)
     w = Chem.SDWriter(output_product_file)
     for m in products:
         w.write(m)
@@ -151,4 +151,4 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     main(args['in_sdf'], args['in_worst'], args['in_ids'],
-         args['in_con'], args['radius'], args['out_compounds'],args['ncores'], args['prot_ids'])
+         args['in_con'], args['radius'], args['max_frag_size'],args['out_compounds'],args['ncores'], args['prot_ids'])
