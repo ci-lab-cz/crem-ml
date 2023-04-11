@@ -198,6 +198,7 @@ def standardize_sdf(input_sdf_file: str, std_rules_path: str,
     run_params = [os.path.join(chemaxon_path, 'standardize'),
                   '-c',
                   quote_str(std_rules_path),  # path to rules
+                  '--ignore-error',
                   quote_str(input_sdf_file),  # path to input file
                   '-f',
                   'sdf',  # type of output file
