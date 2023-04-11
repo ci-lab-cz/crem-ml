@@ -320,12 +320,10 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
 
                 # use compounds which are not in threshold
                 distance_predictions = distance_predictions[distance_predictions.sum(axis=1) > 0]
-
-                input_to_pareto = prepare_points_for_pareto(distance_predictions)
-
-                pkl.dump(input_to_pareto, open("tmp.pkl", "wb"))
+                print(distance_predictions.head())
+                print(parameters)
                 # get list of indexes from pareto frontier
-                pareto = pareto_alg.simple_cull(input_to_pareto, pareto_alg.dominates_min)
+                pareto = pareto_alg.is_pareto_efficient_simple(distance_predictions.loc[:,parameters].values)
 
                 for index in predictions.loc[distance_predictions.iloc[pareto].index].index:
                     selected_compounds_index.add(index)
