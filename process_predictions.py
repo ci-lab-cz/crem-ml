@@ -14,7 +14,7 @@ from optimizer_utils import parse_threshold
 
 from sympy import symbols
 from sympy.parsing.sympy_parser import parse_expr
-
+import pickle as pkl
 from typing import List
 from typing import NewType
 pandas_table = NewType('Processed pandas table with id of compound and predicted properties',
@@ -118,20 +118,23 @@ def save_output(input_sdf: str, out_fname: str, output_poll: pandas_table) -> No
     out_file.close()
     in_file.close()
 
-def prepare_working_arr(in_pred: List, parameters: List, bounded_box: bool) -> pandas_table:
+def prepare_working_arr(in_pred: List, parameters: List, bounded_box: bool, proba_consensus:bool=True) -> pandas_table:
+    #  todo param proba_consensus should go to config, so regression recalculation will be avoided+bettertracking of run
     """
     Reads file with predictions and process it into pandas table
 
     :param in_pred: list of paths to files with all predictions. Columns: 'Compounds', model0,model1,..,modeln,'consensus',	'bound_box'
     :param parameters: list of parameters to predict
     :param bounded_box: if True, then return only compounds within bounded box
+    :param proba_consensus:bool=True. affects only classification (for regression will recalculate same value).
+    If True - replace consensus with mean probability (flat mean over all models, except intermediate consensus models,
+     i.e. svm_0, _1, rf_0, _1...).
     :return: pandas table with prepared predictions (consensus pred for each parameter). Columns:'id', param0,param1,..,paramn
     """
 
     tables = [pd.read_table(file) for file in in_pred]
 
     for table, parameter in zip(tables, parameters):
-
         # if ad
         if bounded_box:
             if table[table.bound_box == 1].shape[0] == 0: # no compounds in ad
@@ -140,7 +143,11 @@ def prepare_working_arr(in_pred: List, parameters: List, bounded_box: bool) -> p
                 table.drop(table[table.bound_box==0].index, inplace=True)
 
         table.drop('bound_box', axis=1, inplace=True)
-        cols_to_drop = list(range(1,table.shape[1]-1))
+        if proba_consensus:
+            table.drop(table.columns[-1], axis=1, inplace=True)# drop  consensus
+            table['consensus']  = table.loc[:,['consensus' not in i for i in  table.columns]].mean(axis=1) # get new consensus
+
+        cols_to_drop = list(range(1,table.shape[1]-1)) # drop all but (new) consensus
         table.drop(table.columns[cols_to_drop], axis=1, inplace=True)
         table.rename(columns={table.columns[0]: 'id', 'consensus': parameter}, inplace=True)
         table.set_index('id', inplace=True)
@@ -266,7 +273,6 @@ def get_norm_value(x_input: float, function: List) -> float:
             return float(function[index][1].subs(x, x_input))
     return 0
 
-
 def main(in_sdf, in_pred, out_database, out_fname, parameters,
          optimization_methods, thresholds, ad, desirabilities=[],
          n_compounds=0, random_compounds=0, brute_force=False):
@@ -317,6 +323,7 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
 
                 input_to_pareto = prepare_points_for_pareto(distance_predictions)
 
+                pkl.dump(input_to_pareto, open("tmp.pkl", "wb"))
                 # get list of indexes from pareto frontier
                 pareto = pareto_alg.simple_cull(input_to_pareto, pareto_alg.dominates_min)
 

@@ -93,14 +93,15 @@ optimization technique and\or randomly (see random_fragments_selection)
 + random_fragments_selection - ratio of randomly selected fragments
 for one compound in one generation, 1 - completely random selection, 0 -
 all fragments are selected using optimization technique
-+ max_frag_size - maximum size of fragment, currently has no effect
++ max_frag_size - maximum size of fragment  (hac) 
 + output_format - defines output format, svm or txt for the file with descriptors.
 + num_of_generation - maximum number of generations
 + n_cores - number of cores used for calculation of descriptors and  in CReM replacement.
 + optimization_method - list of selected optimization methods, e.g. desirability,
 pareto
-+ descriptors_type - one of: MG2, bMG2 (Morgan radius 2),AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint),
-TT (topological torsion). Prefix b means binary fingerprint of length 2048. Models should be built using same desciptors.
++ descriptors_type - 'sirms' or one of: MG2, bMG2 (Morgan radius 2),AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint),
+TT (topological torsion). Prefix b means binary fingerprint of length 2048. Models should be built using same descriptors, 
++ on molecules with explicit hydrogens.
 + store_all_files - (True/False) specifies if you want to store or delete
 intermediate files used for calculations within generations
 + Parameter(s)
