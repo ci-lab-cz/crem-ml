@@ -121,7 +121,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                      settings['output_database'],
                                      settings['processed_predictions_file'],
                                      [parameter['name'] for parameter in parameters_list_dicts],
-                                     settings['optimization_methods'],
+                                     settings['optimization_method'],
                                      [parameter['threshold'] for parameter in parameters_list_dicts],
                                      settings['bounded_box'],
                                      [parameter['desirability'] for parameter in parameters_list_dicts],

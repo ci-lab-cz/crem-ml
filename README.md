@@ -98,7 +98,7 @@ all fragments are selected using optimization technique
 + num_of_generation - maximum number of generations
 + n_cores - number of cores used for calculation of descriptors and  in CReM replacement.
 + optimization_method - list of selected optimization methods, e.g. desirability,
-pareto
+pareto # todo coreect this
 + descriptors_type - 'sirms' or one of: MG2, bMG2 (Morgan radius 2),AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint),
 TT (topological torsion). Prefix b means binary fingerprint of length 2048. Models should be built using same descriptors, 
 + on molecules with explicit hydrogens.

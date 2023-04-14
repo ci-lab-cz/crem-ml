@@ -67,7 +67,7 @@ def main():
         # overwrite radius
         settings['radius'] = comb[1]
         # ooerwrote opt method
-        settings['optimization_methods'] = [comb[2]]
+        settings['optimization_method'] = [comb[2]]
         # overwrite random compound sele
         settings['random_compounds_selection'] = comb[3]
 
