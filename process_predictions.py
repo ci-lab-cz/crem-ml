@@ -265,15 +265,15 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
       - find out random compounds needed number
       -  if PARETO:
         - run pareto on compounds NOT in all(dist <= 0) (i.e. any(dist>0))
-        - if more than specified  n_compounds:  random subset
+        - if more than specified  n_compounds:  random subset # TODO: REMOVED!
       -if DESIRABILITY:
         - filter out    any(dist>0)
         - if less then  specified  n_compounds: take them all
         - else:
             - compute desirability
             - if random_compounds: take only top (best) {1-random compounds needed number}
-            - add sample from any(dist > 0) & not in already selected - sample size = random compounds needed number
-            - save
+     - add sample from any(dist > 0) & not in already selected - sample size = random compounds needed number
+     - save
     """
     print('Processing predictions ...')
 
@@ -322,10 +322,10 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                 selected_compounds_index = predictions.loc[distance_predictions.iloc[pareto].index].index
                 print(selected_compounds_index, "best par")
                 print( distance_predictions.loc[selected_compounds_index])
-                if n_compounds < len(selected_compounds_index):
-
-                    selected_compounds_index = random.sample(selected_compounds_index, n_compounds)
-                    print(selected_compounds_index, "best par subset")
+                # if n_compounds < len(selected_compounds_index):
+                #
+                #     selected_compounds_index = random.sample(list(selected_compounds_index), n_compounds)
+                #     print(selected_compounds_index, "best par subset")
 
         elif optimization_method == 'desirability':
 
@@ -358,15 +358,21 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
         else:
                 print('Unspecified optimization method!')
 
-        if len(selected_compounds_index) < n_compounds:# add random if: 1. pareto had too few; 2. des + random_cmpds>0
+
+        if len(selected_compounds_index) < n_compounds:# add random if: 1. pareto had too few; 2. des + random_cmpds>0 :# add random if: 1. pareto had too few; 2. des + random_cmpds specified in config
 
             predictions_diff = predictions.loc[predictions.index.difference(selected_compounds_index)]
+            print(predictions_diff, "pred_diff")
+
             predictions_diff = predictions_diff.loc[predictions_diff.index.difference(output_filtering.index)]
+            print(predictions_diff, "pred_diff")
+            print(selected_compounds_index)
+            if predictions_diff.shape[0]>0: # any data available
+                print( random.sample(list(predictions_diff.index), n_random))
+                selected_compounds_index = selected_compounds_index.append(
+                                                 predictions_diff.sample( n=n_random).index )
 
-            selected_compounds_index = selected_compounds_index.append(
-                                                 random.sample(list(predictions_diff.index), n_random))
-
-
+            print(selected_compounds_index)
         # save selected compounds
 
         print(predictions.loc[list(selected_compounds_index)])
