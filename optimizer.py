@@ -6,6 +6,7 @@ import shutil
 import sys
 
 from typing import Dict
+from rdkit import Chem
 
 import datetime
 
@@ -68,18 +69,25 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
         # copy input_sdf_file into gen directory
         new_sdf = os.path.join(generation_dir, 'input_dataset.sdf')
         shutil.copyfile(settings['seed_structure'], new_sdf)
-        settings['seed_structure'] = new_sdf
 
         # start generation
         start = datetime.datetime.now()
         print(50 * '_', '\nGeneration {}: {}'.format(gen, start))
+        if "std_rules" in settings:
+            # standardization
+            settings['seed_structure'] = optimizer_utils.standardize_sdf(
+            input_sdf_file = new_sdf,
+            std_rules_path = settings['std_rules'],
+             chemaxon_path = settings[ 'chemaxon']  )
 
-        # standardization
-        settings['seed_structure'] = optimizer_utils.standardize_sdf(
-            input_sdf_file=settings['seed_structure'],
-            std_rules_path=settings['std_rules'],
-            chemaxon_path=settings['chemaxon']
-        )
+        else:# only Add Hs
+            new_sdf_Hs = Chem.SDWriter(os.path.join(os.path.dirname(new_sdf), 'input_dataset_Hs.sdf'))
+            for mol in Chem.SDMolSupplier(new_sdf, removeHs=False):
+                new_sdf_Hs.write(Chem.AddHs(mol))
+            new_sdf_Hs.close()
+            settings['seed_structure'] = os.path.join(os.path.dirname(new_sdf), 'input_dataset_Hs.sdf')
+
+
         if settings['descriptors_type'] == 'sirms':
             # calc atomic properties
             settings['seed_structure'] = optimizer_utils.calculate_atomic_prop(
@@ -114,7 +122,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
         for parameter in parameters_list_dicts:
             list_of_prediction_files.append(
                 os.path.join(generation_dir, 'predictions_{}.txt'.format(parameter['name'])))
-
+        print(settings["seed_structure"])
         settings['processed_predictions_file'] = os.path.join(generation_dir, 'processed_predictions.sdf')
         process_predictions.main(settings['seed_structure'],
                                      list_of_prediction_files,

@@ -142,6 +142,9 @@ def test_config(input_config: str) -> Dict:
         elif (key == 'properties_chemaxon') or (key == 'properties_sirms') \
            or (key == 'properties_calc_contrib'):
             config[key] = value.split(" ")
+
+    assert(not('protected_ids' in config and 'std_rules' in config)) # never standardize if use prot ids, leads to index disordering
+
     if 'sirms' not in config['descriptors_type'] and ('properties_chemaxon' in config  or 'properties_sirms' in config):
         print( "Note, 'properties_chemaxon' and 'properties_sirms' have no effect for descriptors specified, "
                "they are meaningful only for sirms")

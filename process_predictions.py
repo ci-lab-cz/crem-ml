@@ -94,7 +94,7 @@ def save_output(input_sdf: str, out_fname: str, output_poll: pandas_table) -> No
             found_id = line
             this_line_is_id = False
 
-        if line == '>  <ID>':
+        if   '>  <ID>' in line:
             this_line_is_id = True
 
         if line.rstrip() == '$$$$':
@@ -389,7 +389,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Process predicted values with specified optimization method')
     parser.add_argument('-is', '--in_sdf', required=True,
-                        help='path to file which contains standardized compounds')
+                        help='path to file which contains [optinally standardized] compounds')
     parser.add_argument('-ip', '--in_pred', required=True, nargs='*',
                         help='path to files which contains predicted values for properties')
     parser.add_argument('-od', '--output_database', required=True,

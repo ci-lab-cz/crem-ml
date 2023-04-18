@@ -236,7 +236,7 @@ def calculate_fingerprints(input_sdf_file: str,
     Create files with RDKIT fingerprints. Encoded as: ECFP4='MG2', atom pair fingerprint='AP', rdkit fingerprint: 'RDK',
     topological torsions: TT; binary (hashed) versions  are specified with 'b' prefix, e.g. 'bAP'.
 
-    :param input_sdf_file: path to standardized and labeled sdf file
+    :param input_sdf_file: path to [optionally standardized] and labeled sdf file
     :param fingerprint_type: str  fingerprints to calculate e.g. 'bAP','MG2'
     :param output_format: svm
     :param fragments_ids: path to file with frag_ids; if specified, use fragments ids

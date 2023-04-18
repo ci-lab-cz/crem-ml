@@ -9,7 +9,7 @@ THe workflow consists of three parts:
 + Fragment part
 
 Prepartion part focuses on testing input data, configuration file, setting environment
-and so on. Compound part works with entire compounds, it standardizes
+and so on. Compound part works with entire compounds, it optinally standardizes
 compounds, selects the most promising ones, decides whether to finish
 computation or not and so on. Fragment part works with fragments of compounds.
 It tests their contribution against desired profile and decides whether
@@ -64,7 +64,8 @@ Config file structure
 properties
 + setup_file - path to file which contains rules for calculation of atomic
 properties 
-+ std_rules - path to file which contains rules for standardization of compounds
++ std_rules - (optional) path to file which contains rules for standardization of compounds.
++ If not provided - no standaardization will happen, only adding Hs at each generation. Note: Never use std_rules with 'protected_ids'. 
 + chemaxon - path to bin chemaxon’s bin directory
 + seed_structure - path to file with structures to be optimizied
 + number_of_selected_compounds - number of compounds used for
@@ -80,7 +81,10 @@ tools
 + properties_calc_contrib - specifies which type of contribution is used for
 calculation of fragments contribution, you can specify "overall" which uses all atomic labels (see SPCI docs).
 + smart_string - SMARTS pattern  for SIRMS module which defines how
-to fragment compounds (bonds matched by SMARTS will be broken - for more details, see RDKit.Chem.rdMMPA docs)
+to fragment compounds.  (bonds matched by SMARTS will be broken - for more details, see RDKit.Chem.rdMMPA docs)
++ NOTE: Recommended to use default, if you decide to modify it - keep in mind, that breaking bonds with hydrogen atom  
++ while using fingerprints that ignore hydrogen (AP) will highly likely 
++ lead to these hydrogens being selected as worst fragments, because of 0 contributions.
 + max_cuts - number of maximum cuts used in fragmentation procedure (see RDKit.Chem.rdMMPA docs)
 + radius - how distant a context should be considered while making replacements using CReM module. 
 + keep_stereo - ***** (True/False) use information about stereochemistry
@@ -93,7 +97,7 @@ optimization technique and\or randomly (see random_fragments_selection)
 + random_fragments_selection - ratio of randomly selected fragments
 for one compound in one generation, 1 - completely random selection, 0 -
 all fragments are selected using optimization technique
-+ max_frag_size - maximum size of fragment  (hac) 
++ max_frag_size - maximum size of both: fragment to be replaced and new fragment (heavy atom count) (this arg is used only by crem) 
 + output_format - defines output format, svm or txt for the file with descriptors.
 + num_of_generation - maximum number of generations
 + n_cores - number of cores used for calculation of descriptors and  in CReM replacement.
