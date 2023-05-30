@@ -117,7 +117,8 @@ def test_config(input_config: str) -> Dict:
             # check if types of models exists, e.g. model + type + ".pkl"
             config[key]['types_of_alg'] = config[key]['types_of_alg'].split(" ")
             for alg in config[key]['types_of_alg']:
-                assert isfile(os.path.join(config[key]['path'], alg + ".pkl")), \
+                if alg != "MPNN":
+                    assert isfile(os.path.join(config[key]['path'], alg + ".pkl")), \
                         "{} doesn't exists".format(os.path.join(config[key]['path'], alg + ".pkl"))
         # check settings with numbers
         elif (key == 'n_cores') or (key == 'max_cuts') \
@@ -148,7 +149,10 @@ def test_config(input_config: str) -> Dict:
     if 'sirms' not in config['descriptors_type'] and ('properties_chemaxon' in config  or 'properties_sirms' in config):
         print( "Note, 'properties_chemaxon' and 'properties_sirms' have no effect for descriptors specified, "
                "they are meaningful only for sirms")
-    acceptable_descr = [ 'sirms','MG2','AP','RDK','TT','bMG2','bAP','bRDK']
+    if config ['output_format'] != "txt" and config ['descriptors_type'] == "MPNN_fingerprint":
+        print( "Note, any non-txt 'output_format' will be overridden by 'txt' when MPNN models are used.")
+
+    acceptable_descr = [ 'sirms','MG2','AP','RDK','TT','bMG2','bAP','bRDK', 'MPNN_fingerprint']
     assert sum([config['descriptors_type'] == i for i in acceptable_descr]) == 1
     # if user specify desirabilty then user must specify number of selected of compounds
     if  config['optimization_method'] == 'desirability':

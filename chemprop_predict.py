@@ -1,0 +1,121 @@
+import chemprop
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.offsetbox import AnchoredText
+from rdkit import Chem
+from torch import Tensor
+import torch
+from torch.nn.functional import sigmoid
+import numpy as np
+from  sirms.files import LoadFragments
+from collections import OrderedDict
+
+
+mol_frag_sep = "###"
+
+
+def main_params(x_fname,
+                     out_fname,
+                     model_dir,
+                     model_type,
+                     # ad# uncertainty? bb?,
+                     input_format="csv",  # for crem-ml compatability, not used
+                     model_names="MPNN",  # for crem-ml compatability, not used
+                     verbose=None,  # for crem-ml compatability, not used
+                     title=None,  # for crem-ml compatability, not used
+                     save_pred=True,
+                     fragments_mode=False,
+                     num_frag_id=False):
+    # load model
+    arguments = [
+        '--test_path', '/dev/null',
+        '--preds_path', '/dev/null',
+        '--checkpoint_dir', model_dir
+    ]
+
+    args = chemprop.args.PredictArgs().parse_args(arguments)
+
+    _, __, model, scaler, ___, ____ = chemprop.train.load_model(args=args)
+    sclr = scaler[0][0]
+    ffn = model[0].ffn
+
+    # read fingerprint and coerce to tensor of 2 dims
+    fp_names = pd.read_csv(x_fname, header=None)
+    fp_names.columns = ['Compounds'] + fp_names.columns[1:].tolist()
+    # take only fp, strip names
+    fp = Tensor(fp_names.values[:, 1:].astype(float))
+
+    # separate mol and frag name use only for fragments file
+    if fragments_mode:
+        fp_names[['Compounds', 'Fragment']] = fp_names.Compounds.str.split(mol_frag_sep, expand=True)
+        if num_frag_id: # separate  piece after last # - numerical fragment id
+            fp_names[['Fragment', 'Frag_id']] = fp_names.Fragment.str.rsplit("#", n=1, expand=True)
+
+    # predict FP
+    ffn.eval()
+    with torch.no_grad():
+        out = ffn.forward(fp)
+    if model_type == "reg":
+        out = sclr.inverse_transform(out)
+
+    elif model_type == "class":
+        out = np.asarray(sigmoid(out))
+
+    # construct df and  write to file
+    if fragments_mode:
+        if num_frag_id:
+            out = pd.DataFrame(pd.concat(
+                (fp_names.Compounds, fp_names.Fragment, fp_names.Frag_id, pd.DataFrame(out, columns=['MPNN_0'])),
+                axis=1))
+        else:
+            out = pd.DataFrame(
+                pd.concat((fp_names.Compounds, fp_names.Fragment, pd.DataFrame(out, columns=['MPNN_0'])), axis=1))
+
+    else:
+        out = pd.DataFrame(pd.concat((fp_names.Compounds, pd.DataFrame(out, columns=['MPNN_0'])), axis=1))
+
+    out["consensus"] = out["MPNN_0"]
+    out["bound_box"] = 1
+    print(out, "chemprp_pr")
+    if save_pred:
+        out.to_csv(out_fname, sep="\t", index=False)
+
+    return out
+
+
+def entry_point():
+    parser = argparse.ArgumentParser(description='Predict parameters (properties) using chemprop fingerprint and '
+                                                 'chemprop model (passing FP through lastFFN of the model)')
+    parser.add_argument('-i', '--x_fname', metavar='param_x.txt', required=True,
+                        help='input file with fingerprints for compounds for  a given parameter in csv format')
+    parser.add_argument('-o', '--out', metavar='param_pred.txt', required=True,
+                        help='output file with predictions, tsv.')
+    parser.add_argument('-d', '--model_dir',
+                        help='Path to model '
+                             )
+    parser.add_argument('-t', '--type', metavar='regression/classification', required=True,
+                        help='')
+
+    # parser.add_argument('-a', '--applicability_domain', metavar='none|bound_box', required=False, nargs='*', default=None,
+    #                     help='name(s) of applicability domain(s) to apply. If several - provide a space separated '
+    #                          'list. Possible values: none - do not compute; bound_box - compounds with descriptor '
+    #                          'values out of those for training set compounds are outside AD. Default: none')
+    args = vars(parser.parse_args())
+
+    for o, v in args.items():
+        if o == "x_fname": x_fname = v
+        if o == "out": out_fname = v
+        if o == "model_dir": model_dir = v
+        if o == "model_type": model_type= v
+
+    # if ad is not None and 'none' in ad:
+    #         ad.remove('none')
+    #         if not ad:
+    #             ad = None
+
+    main_params(x_fname=x_fname, out_fname=out_fname, model_dir=model_dir, model_type=model_type)
+
+
+if __name__ == '__main__':
+    entry_point()
+

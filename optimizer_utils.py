@@ -21,6 +21,8 @@ from spci import find_frags_auto_rdkit as find_frags
 from spci import filter_descriptors
 from spci import calc_frag_contrib as frag_contrib
 
+import chemprop_descriptors
+import chemprop_predict
 
 # sys.path.insert(1, os.path.join(sys.path[0], 'spci/sirms'))
 from sirms import sirms
@@ -230,7 +232,7 @@ def calculate_atomic_prop(input_sdf_file: str, chemaxon_path: str, properties: L
 # noinspection PyStatementEffect
 
 def calculate_fingerprints(input_sdf_file: str,
-                            fingerprint_type: str, output_format: str,
+                            fingerprint_type: str, output_format: str, model_path:str=None,parameter_name:str=None,
                             fragments_ids=None, id_field_name: str = 'ID') -> None:
     """
     Create files with RDKIT fingerprints. Encoded as: ECFP4='MG2', atom pair fingerprint='AP', rdkit fingerprint: 'RDK',
@@ -239,6 +241,8 @@ def calculate_fingerprints(input_sdf_file: str,
     :param input_sdf_file: path to [optionally standardized] and labeled sdf file
     :param fingerprint_type: str  fingerprints to calculate e.g. 'bAP','MG2'
     :param output_format: svm
+    :param model_path: provide this path iff calculating MPNN fingerprint
+    :param parameter_name: provide this name (of target property corresponding to model) iff  calculating MPNN fingerprint
     :param fragments_ids: path to file with frag_ids; if specified, use fragments ids
     :param id_field_name: specifies name of parameter in which is id of mol saved
     """
@@ -247,11 +251,31 @@ def calculate_fingerprints(input_sdf_file: str,
 
     # define output files
     if fragments_ids is not None:
-        x_fname = os.path.join(os.path.dirname(input_sdf_file), 'new_x.txt')
-    else:
-        x_fname = os.path.join(os.path.dirname(input_sdf_file), 'x.txt')
+        if fingerprint_type != "MPNN_fingerprint":
+            x_fname = os.path.join(os.path.dirname(input_sdf_file), 'new_x.txt')
+        else: # indicate parameter for which fp is created in output file name
+            if parameter_name is None: print("for MPNN fingerprint parameter_name must be specified"); return None
+            x_fname = os.path.join(os.path.dirname(input_sdf_file), parameter_name+'_MPNN_fingerprint_new_x.txt')
 
-    descriptors.main_params(  in_fname=input_sdf_file,    # input
+    else:
+        if fingerprint_type != "MPNN_fingerprint":
+            x_fname = os.path.join(os.path.dirname(input_sdf_file), 'x.txt')
+        else:  # indicate parameter for which fp is created in output file name
+            if parameter_name is None: print("for MPNN fingerprint parameter_name must be specified"); return None
+            x_fname = os.path.join(os.path.dirname(input_sdf_file), parameter_name+'_MPNN_fingerprint_x.txt')
+
+    if fingerprint_type == "MPNN_fingerprint": # mpnn fingerprint
+        chemprop_descriptors.main_params( in_fname=input_sdf_file,    # input
+                          out_fname=x_fname,        # output
+                          opt_noH=False,
+                          frag_fname=fragments_ids,
+                          per_atom_fragments=False,
+                          id_field_name=id_field_name,
+                          model_path=model_path
+                          )
+
+    else: # rdkit fingerprint
+        descriptors.main_params(  in_fname=input_sdf_file,    # input
                           out_fname=x_fname,        # output
 
                           opt_verbose=False,
@@ -352,7 +376,15 @@ def predict_properties(parameters: List, descriptors_fname: str, output_format: 
         output_file_name = os.path.join(os.path.dirname(descriptors_fname),
                                         'predictions_{}.txt'.format(parameter['name']))
 
-        predict.main_params(x_fname=descriptors_fname,
+        if  "MPNN_fingerprint" in descriptors_fname:
+            chemprop_predict.main_params(x_fname=descriptors_fname,
+                             out_fname=output_file_name,
+                             model_dir=parameter['path'],
+                             model_type=parameter['type_of_model'],
+                             # ad# uncertainty? bb?,
+                             )
+        else:
+            predict.main_params(x_fname=descriptors_fname,
                             input_format=output_format,
                             out_fname=output_file_name,
                             model_names=parameter['types_of_alg'],
@@ -408,7 +440,17 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
         # todo : need abiltiy of handling chunks in sirmsfile - for cases when too few frags were generated,  we need higher value
 
         print("Fragment contribution for {} started".format(parameter))
-        frag_contrib.main_params(x_fname=x_fname,
+        if types_of_alg == ["MPNN"]:
+            chemprop_frag_contrib.main_params(
+                x_fname=x_fname,
+                out_fname=os.path.join(os.path.dirname(x_fname),
+                        'contrib_{}.txt'.format(parameter)),
+                model_dir=model_dir,
+                model_type=model_type,
+                save_pred=False)
+
+        else:
+            frag_contrib.main_params(x_fname=x_fname,
                                  out_fname=os.path.join(os.path.dirname(x_fname),
                                                         'contrib_{}.txt'.format(parameter)),
                                  model_names=type_of_alg,

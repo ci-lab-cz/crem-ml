@@ -102,20 +102,45 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                         settings['output_format'],
                                         settings['n_cores']
                                         )
+
         else:
             # calculation of  fingerprints  specified in config
-            optimizer_utils.calculate_fingerprints(settings['seed_structure'],
+
+            if settings['descriptors_type'] == "MPNN_fingerprint":
+                for i, dict in enumerate(parameters_list_dicts): # over parameters
+                    # set path with mpnn model;
+                    mpnn_path = parameters_list_dicts[i]['path']
+                    optimizer_utils.calculate_fingerprints(settings['seed_structure'],
                                                    settings['descriptors_type'],
                                                    settings['output_format'],
-
+                                                   mpnn_path,
+                                                   str(parameters_list_dicts[i]['name'])
                                                         )
-        fragments_fname = os.path.join(generation_dir, 'x.txt')
+                    # predict properties based on different x.txt for each param
+                    fragments_fname = os.path.join(generation_dir, str(parameters_list_dicts[i]['name'])+'_MPNN_fingerprint_x.txt')
+                    # predict properties based on MPNN FP (for specific parameter) of std_lbl_sdf file
+                    optimizer_utils.predict_properties([ parameters_list_dicts[i]],# take only current param in []
+                                                       fragments_fname,
+                                                       settings['output_format']
+                                                       )
 
-        # predict properties of std_lbl_sdf file
-        optimizer_utils.predict_properties(parameters_list_dicts,
-                                           fragments_fname,
-                                           settings['output_format']
-                                           )
+            else:
+                optimizer_utils.calculate_fingerprints(settings['seed_structure'],
+                                                       settings['descriptors_type'],
+                                                       settings['output_format'],
+                                                       )
+
+        # predict properties based on single x.txt for all params
+
+        if  settings['descriptors_type'] != "MPNN_fingerprint":
+            fragments_fname = os.path.join(generation_dir, 'x.txt')
+            optimizer_utils.predict_properties(parameters_list_dicts,
+                                                   fragments_fname,
+                                                   settings['output_format']
+                                                   )
+
+
+
 
         # process predictions
         list_of_prediction_files = []   # prepare list of file paths with predictions
@@ -166,17 +191,45 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                         settings['n_cores'],
                                         fragments_ids=settings['fragments_ids_file']
                                         )
+
         else:
-            # calculation of  fingerprints  specified in config
-            optimizer_utils.calculate_fingerprints(settings['seed_structure'],
+            if settings['descriptors_type'] == 'MPNN_fingerprint':
+                for i, dict in enumerate(parameters_list_dicts):
+                    # set path with mpnn model
+                    mpnn_path = parameters_list_dicts[i]['path']
+                    param_name = str(parameters_list_dicts[i]['name'])
+                    optimizer_utils.calculate_fingerprints(settings['seed_structure'],
+                                                       settings['descriptors_type'],
+                                                       settings['output_format'],
+                                                       mpnn_path,
+                                                        param_name,
+                                                       fragments_ids=settings['fragments_ids_file']
+                                                       )
+                    new_fragments_fname = os.path.join(generation_dir, str(parameters_list_dicts[i]['name'])+'_MPNN_fingerprint_new_x.txt')
+                    # calc contrib using different new_x.txt for different parameter
+                    optimizer_utils.calc_frag_contrib(new_fragments_fname,
+                                                          [parameter['name'] for parameter in parameters_list_dicts],
+                                                          [parameter['types_of_alg'] for parameter in
+                                                           parameters_list_dicts],
+                                                          [parameter['path'] for parameter in parameters_list_dicts],
+                                                          [parameter['type_of_model'] for parameter in
+                                                           parameters_list_dicts],
+                                                          settings['properties_calc_contrib'],
+                                                          settings['output_format'])
+            else:
+                # calculation of  fingerprints  specified in config
+                optimizer_utils.calculate_fingerprints(settings['seed_structure'],
                                                    settings['descriptors_type'],
                                                    settings['output_format'],
                                                    fragments_ids=settings['fragments_ids_file']
                                                    )
-        new_fragments_fname = os.path.join(generation_dir, 'new_x.txt')
+
 
         # calculate fragments contributions
-        optimizer_utils.calc_frag_contrib(new_fragments_fname,
+
+        if  settings['descriptors_type'] != 'MPNN_fingerprint': # calculate contribs using SINGLE new_x.txt for each param
+            new_fragments_fname = os.path.join(generation_dir, 'new_x.txt')
+            optimizer_utils.calc_frag_contrib(new_fragments_fname,
                                           [parameter['name'] for parameter in parameters_list_dicts],
                                           [parameter['types_of_alg'] for parameter in parameters_list_dicts],
                                           [parameter['path'] for parameter in parameters_list_dicts],
