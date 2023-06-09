@@ -262,10 +262,10 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
       - calc distances
       - filter out and save compounds with all(dist <= 0)
       - add them to db
-      - find out random compounds needed number
+      - find outneeded number of random compounds
       -  if PARETO:
         - run pareto on compounds NOT in all(dist <= 0) (i.e. any(dist>0))
-        - if more than specified  n_compounds:  random subset # TODO: REMOVED!
+        - select all compounds from the pareto frontier
       -if DESIRABILITY:
         - filter out    any(dist>0)
         - if less then  specified  n_compounds: take them all
@@ -313,19 +313,16 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
 
         n_random = math.floor(n_compounds * random_compounds) #  will be used later
 
-        if optimization_method == 'pareto': # n_random has no effect, select only pareto points TODO second order
+        if optimization_method == 'pareto': # n_compounds has no effect, select only and all pareto points TODO second order
 
                 # use compounds which are not in threshold
                 distance_predictions = distance_predictions[distance_predictions.apply(lambda x:  np.any(x>0), axis=1)]
                 # get list of indexes from pareto frontier
                 pareto = pareto_alg.is_pareto_efficient_simple(distance_predictions.loc[:,parameters].values)
                 selected_compounds_index = predictions.loc[distance_predictions.iloc[pareto].index].index
-                print(selected_compounds_index, "best par")
-                print( distance_predictions.loc[selected_compounds_index])
-                # if n_compounds < len(selected_compounds_index):
-                #
-                #     selected_compounds_index = random.sample(list(selected_compounds_index), n_compounds)
-                #     print(selected_compounds_index, "best par subset")
+                # print(selected_compounds_index, "best par")
+                # print( distance_predictions.loc[selected_compounds_index])
+
 
         elif optimization_method == 'desirability':
 
@@ -359,7 +356,7 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                 print('Unspecified optimization method!')
 
 
-        if len(selected_compounds_index) < n_compounds:# add random if: 1. pareto had too few; 2. des + random_cmpds>0 :# add random if: 1. pareto had too few; 2. des + random_cmpds specified in config
+        if len(selected_compounds_index) < n_compounds:# add random if: 1. pareto had too few; 2. des sued with random_cmpds>0
 
             predictions_diff = predictions.loc[predictions.index.difference(selected_compounds_index)]
             print(predictions_diff, "pred_diff")

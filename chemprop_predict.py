@@ -35,59 +35,68 @@ def main_params(x_fname,
 
     args = chemprop.args.PredictArgs().parse_args(arguments)
 
-    _, __, model, scaler, ___, ____ = chemprop.train.load_model(args=args)
-    sclr = scaler[0][0]
-    ffn = model[0].ffn
+    _, __, models, scalers, ___, ____ = chemprop.train.load_model(args=args)
+    sclrs = [i[0] for i in scalers]
+    ffns = [i.ffn for i in models]
 
-    # read fingerprint and coerce to tensor of 2 dims
-    fp_names = pd.read_csv(x_fname, header=None)
-    fp_names.columns = ['Compounds'] + fp_names.columns[1:].tolist()
-    # take only fp, strip names
-    fp = Tensor(fp_names.values[:, 1:].astype(float))
+    outs = []
+    for i,(scl, ffn) in enumerate(zip(sclrs, ffns)):
+        # read fingerprint and coerce to tensor of 2 dims
+        tmp = x_fname.split(".")
+        x_fname_i = tmp[0] + "_"+str(i)+"."+tmp[1]
+        fp_names = pd.read_csv(x_fname_i, header=None)
+        fp_names.columns = ['Compounds'] + fp_names.columns[1:].tolist()
+        # take only fp, strip names
+        fp = Tensor(fp_names.values[:, 1:].astype(float))
 
-    # separate mol and frag name use only for fragments file
-    if fragments_mode:
-        fp_names[['Compounds', 'Fragment']] = fp_names.Compounds.str.split(mol_frag_sep, expand=True)
-        if num_frag_id: # separate  piece after last # - numerical fragment id
-            fp_names[['Fragment', 'Frag_id']] = fp_names.Fragment.str.rsplit("#", n=1, expand=True)
+        # separate mol and frag name use only for fragments file
+        if fragments_mode:
+            fp_names[['Compounds', 'Fragment']] = fp_names.Compounds.str.split(mol_frag_sep, expand=True)
+            if num_frag_id: # separate  piece after last # - numerical fragment id
+                fp_names[['Fragment', 'Frag_id']] = fp_names.Fragment.str.rsplit("#", n=1, expand=True)
 
-    # predict FP
-    ffn.eval()
-    with torch.no_grad():
-        out = ffn.forward(fp)
-    if model_type == "reg":
-        out = sclr.inverse_transform(out)
+        # predict FP
+        ffn.eval()
+        with torch.no_grad():
+            out = ffn.forward(fp)
+        if model_type == "reg":
+            out = scl.inverse_transform(out)
 
-    elif model_type == "class":
-        out = np.asarray(sigmoid(out))
+        elif model_type == "class":
+            out = np.asarray(sigmoid(out))
+
+        outs.append(out)
+    print(np.array(outs).shape)
+    outs = np.mean(np.array(outs), axis=0)
+    print(np.array(outs).shape)
 
     # construct df and  write to file
     if fragments_mode:
         if num_frag_id:
-            out = pd.DataFrame(pd.concat(
-                (fp_names.Compounds, fp_names.Fragment, fp_names.Frag_id, pd.DataFrame(out, columns=['MPNN_0'])),
+            outs = pd.DataFrame(pd.concat(
+                (fp_names.Compounds, fp_names.Fragment, fp_names.Frag_id, pd.DataFrame(outs, columns=['MPNN_0'])),
                 axis=1))
         else:
-            out = pd.DataFrame(
-                pd.concat((fp_names.Compounds, fp_names.Fragment, pd.DataFrame(out, columns=['MPNN_0'])), axis=1))
+            outs = pd.DataFrame(
+                pd.concat((fp_names.Compounds, fp_names.Fragment, pd.DataFrame(outs, columns=['MPNN_0'])), axis=1))
 
     else:
-        out = pd.DataFrame(pd.concat((fp_names.Compounds, pd.DataFrame(out, columns=['MPNN_0'])), axis=1))
+        outs = pd.DataFrame(pd.concat((fp_names.Compounds, pd.DataFrame(outs, columns=['MPNN_0'])), axis=1))
 
-    out["consensus"] = out["MPNN_0"]
-    out["bound_box"] = 1
-    print(out, "chemprp_pr")
+    outs["consensus"] = outs["MPNN_0"]
+    outs["bound_box"] = 1
+    print(outs, "chemprp_pr")
     if save_pred:
-        out.to_csv(out_fname, sep="\t", index=False)
+        outs.to_csv(out_fname, sep="\t", index=False)
 
-    return out
+    return outs
 
 
 def entry_point():
     parser = argparse.ArgumentParser(description='Predict parameters (properties) using chemprop fingerprint and '
                                                  'chemprop model (passing FP through lastFFN of the model)')
     parser.add_argument('-i', '--x_fname', metavar='param_x.txt', required=True,
-                        help='input file with fingerprints for compounds for  a given parameter in csv format')
+                        help='input file with fingerprints for compounds for  a given parameter in pkl format')
     parser.add_argument('-o', '--out', metavar='param_pred.txt', required=True,
                         help='output file with predictions, tsv.')
     parser.add_argument('-d', '--model_dir',

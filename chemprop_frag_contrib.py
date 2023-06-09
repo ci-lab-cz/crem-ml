@@ -49,15 +49,23 @@ def main_params(x_fname:str,
                                   num_frag_id=True
                                   )
 
+
+    # rename copounds->compound (spci consuistent)
+    frag_preds.columns = ['Compound']+ frag_preds.columns[1:].tolist()
     # add mol_pred column (pandas)
+    compound_preds = frag_preds.loc[pd.isnull(frag_preds.Fragment), ["Compound", "consensus"]]
 
-    compound_preds = frag_preds.loc[pd.isnull(frag_preds.Fragment), ["Compounds", "consensus"]]
-
-    frag_preds = pd.merge(frag_preds, compound_preds, on="Compounds", suffixes=["_f", "_c"])
+    frag_preds = pd.merge(frag_preds, compound_preds, on="Compound", suffixes=["_f", "_c"])
 
     # diff
     frag_preds["Contribution_value"] = frag_preds['consensus_c'] - frag_preds["consensus_f"]
-    frag_preds['contribution_type'] = "overall"  # for format compatibility
+    frag_preds['Contribution_type'] = "overall"  # for format compatibility
+    frag_preds['Model'] = "MPNN"  # for format compatibility
+    # remove molecules , leave only frags
+    frag_preds = frag_preds.loc[~pd.isnull(frag_preds.Fragment),:]
+
     #  write (pandas)
+    frag_preds.to_csv(out_fname, sep="\t", index=False)
+
     return frag_preds
 

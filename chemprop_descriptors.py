@@ -8,25 +8,29 @@ import torch
 import numpy as np
 from  sirms.files import LoadFragments
 from collections import OrderedDict
-
+import os
 
 mol_frag_sep = "###"
 
 
 def chemprop_CalcMolFP(m, model, i, opt_noH, frags=None, per_atom_fragments=None, id_field_name=None):
-    def get_fp_as_dict(mol, model, opt_noH):
+    def get_fp_as_np(mol, model, opt_noH):
         """calc specified fingerprint for input molecule and return nonzero elements of it as dict
         """
 
         if opt_noH:
-            # Chem.RemoveHs(mol)  # !it doesnt help, anyway next line gets them Hs back
-            mol = Chem.RWMol(mol)
-            for idx in reversed(range(mol.GetNumAtoms())):  # reverse because ids of atoms change while iter
-                if mol.GetAtomWithIdx(idx).GetAtomicNum() == 1:
-                    mol.RemoveAtom(idx)
-            Chem.FastFindRings(mol)  # needs to calc morganfp, otherwise err "no ringinfo"
+           mol =  Chem.RemoveHs(mol)
+            # mol = Chem.RWMol(mol)
+            # for idx in reversed(range(mol.GetNumAtoms())):  # reverse because ids of atoms change while iter
+            #     if mol.GetAtomWithIdx(idx).GetAtomicNum() == 1:
+            #         mol.RemoveAtom(idx)
+        # print(Chem.MolToMolBlock(mol))
+
         with torch.no_grad():
-            fp = model.fingerprint([[mol]], fingerprint_type="MPN")  # list of 1 rdkit.mol -> torch.tesor
+
+
+            fp=model.fingerprint([[mol]], fingerprint_type="MPN") # list of 1 rdkit.mol -> torch.tesor
+
         return np.array(fp).squeeze(0)
 
     mol_dict = OrderedDict()
@@ -36,7 +40,7 @@ def chemprop_CalcMolFP(m, model, i, opt_noH, frags=None, per_atom_fragments=None
         nm = 'auto_generated_id_' + str(i + 1)  # 1-based as in sirms.py
     else:
         nm = m.GetProp("_Name")
-    res = get_fp_as_dict(m, model, opt_noH)
+    res = get_fp_as_np(m, model, opt_noH)
     mol_dict[nm] = res
     if per_atom_fragments:
         counter = 0
@@ -44,14 +48,14 @@ def chemprop_CalcMolFP(m, model, i, opt_noH, frags=None, per_atom_fragments=None
             if m.GetAtomWithIdx(idx).GetAtomicNum() > 1:
                 rw_m = Chem.RWMol(m)
                 rw_m.GetAtoms()[idx].SetAtomicNum(0)
-                mol_dict[nm + mol_frag_sep + str(idx + 1) + "#" + str(counter)] = get_fp_as_dict(rw_m, model, opt_noH)
+                mol_dict[nm + mol_frag_sep + str(idx + 1) + "#" + str(counter)] = get_fp_as_np(rw_m, model, opt_noH)
                 counter += 1
     elif frags and nm in frags:
         for k, v in frags[nm].items():
             rw_m = Chem.RWMol(m)
             for idx in sorted(v, reverse=True):  # note we don't check if atom== H (is it ok?)
                 rw_m.GetAtoms()[idx - 1].SetAtomicNum(0)
-            mol_dict[nm + mol_frag_sep + k] = get_fp_as_dict(rw_m, model, opt_noH)
+            mol_dict[nm + mol_frag_sep + k] = get_fp_as_np(rw_m, model, opt_noH)
     return mol_dict
 
 def main_params(in_fname, out_fname, model_path, opt_noH, frag_fname,
@@ -64,23 +68,30 @@ def main_params(in_fname, out_fname, model_path, opt_noH, frag_fname,
     ]
     args = chemprop.args.PredictArgs().parse_args(arguments)
     model_objects = chemprop.train.load_model(args=args)
-    model = model_objects[2][0]  # mpnn  part of the model:"encoder"
+    models = [i for  i in model_objects[2]]# i  = ith model in ensemble
 
     # load sdf and get dict of fp (like sirms dict)
     input_file_extension = in_fname.strip().split(".")[-1].lower()
     if input_file_extension == 'sdf':
-        mols = None
-        mols = OrderedDict()  # key - molname, val- mol; if frags: key - molname or mol+fragname, val-mol for mol or part b
         frags = LoadFragments(frag_fname)
-        for i, m in enumerate(Chem.SDMolSupplier(in_fname, removeHs=False)):
-            if m is not None:
-                res = chemprop_CalcMolFP(m, model, i, opt_noH=opt_noH, frags=frags,
+        for k,mod in enumerate(models):
+            mols = None
+            mols = OrderedDict()  # key - molname, val- mol; if frags: key - molname or mol+fragname, val-mol for mol or part b
+            for i, m in enumerate(Chem.SDMolSupplier(in_fname, removeHs=False)):
+
+                if m is not None:
+
+
+                    res=chemprop_CalcMolFP(m, mod, i, opt_noH=opt_noH, frags=frags,
                                          per_atom_fragments=per_atom_fragments,
                                          id_field_name=id_field_name)
 
-                mols.update(res)
-        # save to file
-        pd.DataFrame.from_dict(mols, orient="index").to_csv(out_fname, header=False)
+                    mols.update(res)
+                #save to file
+            tmp = out_fname.split(".")
+            pd.DataFrame.from_dict(mols, orient="index").to_csv(tmp[0]+"_"+str(k)+"."+tmp[1], header=0)
+
+
     else:
         print("Input file extension should be SDF Current file has %s. Please check it." %
               input_file_extension.upper())

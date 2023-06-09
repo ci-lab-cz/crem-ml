@@ -23,6 +23,7 @@ from spci import calc_frag_contrib as frag_contrib
 
 import chemprop_descriptors
 import chemprop_predict
+import chemprop_frag_contrib
 
 # sys.path.insert(1, os.path.join(sys.path[0], 'spci/sirms'))
 from sirms import sirms
@@ -267,7 +268,7 @@ def calculate_fingerprints(input_sdf_file: str,
     if fingerprint_type == "MPNN_fingerprint": # mpnn fingerprint
         chemprop_descriptors.main_params( in_fname=input_sdf_file,    # input
                           out_fname=x_fname,        # output
-                          opt_noH=False,
+                          opt_noH=True, #  MPNN fingerprint with hs may  lead  (?) to wrong predictions
                           frag_fname=fragments_ids,
                           per_atom_fragments=False,
                           id_field_name=id_field_name,
@@ -440,7 +441,8 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
         # todo : need abiltiy of handling chunks in sirmsfile - for cases when too few frags were generated,  we need higher value
 
         print("Fragment contribution for {} started".format(parameter))
-        if types_of_alg == ["MPNN"]:
+
+        if type_of_alg == ["MPNN"]:
             chemprop_frag_contrib.main_params(
                 x_fname=x_fname,
                 out_fname=os.path.join(os.path.dirname(x_fname),
