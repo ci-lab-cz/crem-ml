@@ -3,24 +3,28 @@ CReM-ML: System for multiobjective optimization of small molecules' properties
 
 Overview
 ----------
-Name *CReM-ML* is composed of CReM: Chemically reasonlble mutations and ML: machine learning. THe method is an iterative 
+Name *CReM-ML* is composed of *CReM: Chemically reasonlble mutations* and *ML: machine learning*. The method is an iterative 
 compound optimizer based on ML models (QSAR) and Pareto-frontier optimization/desirability-function-based optimization.
+The concept of  *XAI: explainable AI* is employed. Model explanations allow to discover the influence of molecular 
+fragments on their properties. Based on this, molecules are modified (optimized).
 
-THe workflow consists of three parts:
+
+The workflow consists of three parts:
 + Preparation part
 + Compound part
 + Fragment part
 
-Prepartion part focuses on testing input data, configuration file, setting environment
+Preparation part focuses on testing input data, configuration file, setting environment
 and so on. Compound part works with entire compounds, it optionally standardizes
 compounds, selects the most promising ones, decides whether to finish
-computation (if compounds satisfy specified values of properties and their number is sufficient) or not and so on.
+computation (if there is sufficient number of compounds satisfying specified values of properties) and so on.
 Fragment part works with fragments of compounds.
-It calculates their contributions to optimized parameteres (properties). Then, it tests these fragments' contributions
-against desired profile and decides whether to replace each given fragment or leave it as it is. The result of this stage is 
-pool of new compounds ("generation"). They proceed to preparation part -> compound part -> fragment part (loop closes).
+It calculates their contributions to optimized parameters (properties). Then, it tests these fragments' contributions
+against desired profile and decides whether to replace each given fragment or leave it as it is.
+The result of this stage is a pool of new compounds ("generation"). 
+They proceed back to preparation part -> compound part -> fragment part (loop).
 Program stops when either: 
-- yielded compound pool is >= to specified number;
+- yielded compound pool with desired properties  is >= to specified number;
 - Maximum specified number of generations is reached.
 
 Note on randomness
@@ -32,9 +36,9 @@ To achieve that, random compounds and fragments can be "mixed into" selected one
 randomly drawn from those  generated on current step; random fragments for a given compound are fragments randomly drawn 
 from fragments resulting from breaking that compound.) Randomness can be  switched off for "safer" but less novel results.
 
-Note on QSAR model qualiy
+Note on QSAR model quality
 -------------------------
-THe metod uses  QSAR models built in advance. The prformance critically depends on their quality
+The method uses  QSAR models built in advance. The performance critically depends on their quality
 
 Installation
 -------------
