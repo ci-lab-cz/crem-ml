@@ -42,6 +42,10 @@ The method uses  QSAR models built in advance. The performance critically depend
 
 Installation
 -------------
+All the required packages can be installed by creating conda environment from a file provided
+
+`conda env create -f env_no_builds.yml`
+
 This code requires the installation of the following packages:
 + joblib
 + numpy
@@ -68,20 +72,30 @@ Chemaxon tools can be installed from https://chemaxon.com/
 
 All other packages can be installed using *conda* or *pip*. 
 
-Environment
------------
-
-`conda env create -f env.yml`
-
 How To Use
 -----------
 
 Main script is called *optimizer.py*.
-Create a config file, activate conda environment, and run
+Create a config file. For quick-start template *config.yml* with default parameters can be used
+(enter only task-specific parameters, i.e. working directory, model paths and so on). Example configs for some tasks 
+are provided as well (exampples folder).
+then activate conda environment
+
+`$ conda activate crem_ml_env`
+
+ and run
 
 `$ cd ~/path_to_crem-ml/`
 
+
+
 `$ python optimizer.py -i ~/path_to_config/config.yaml`
+
+CReM replacement database
+-------------------------
+To use CReM-ML (and CReM) you need a database with interchangeable fragments, several version can be found at
+http://www.qsar4u.com/pages/crem.php. (Currently recommended is replacements02_sa2.db.gz.)
+
 
 Config file structure and description of input  parameters
 ----------------------------------------------------------
@@ -90,76 +104,111 @@ Config file structure and description of input  parameters
 + num_of_output_compounds - number of compounds with desired
 properties. The program will stop once this is satisfied (unless it will stop earlier upon another condition).
 + setup_file - (optional) path to file which contains rules for calculation of atomic
-properties, needed only if SIRMS descriptors are used and  *properties_sirms != elm*
-+ std_rules - (optional) path to file which contains rules for standardization of compounds.
-+ If not provided - no standaardization will happen, only adding Hs at each generation. Note: Never use std_rules with 'protected_ids'. 
-+ chemaxon - (optional) path to bin chemaxon’s bin directory
-+ seed_structure - path to file with structures to be optimizied
+properties, required  only if SIRMS descriptors are used and  *properties_sirms != elm*
++ std_rules - (optional) path to file which contains rules for standardization of compounds. 
+  If not provided - no standardization will happen, only adding Hydrogens. 
+  Note: Do  not  use std_rules with 'protected_ids'. 
++ chemaxon - (optional) path to bin chemaxon’s bin directory. Required only if SIRMS 
+  descriptors are used and  *properties_sirms != elm*
++ seed_structure - path to sdf  file with structures to be optimized
 + number_of_selected_compounds - number of compounds selected for optimization in one generation. 
-+ This has effect only when desirability optimization method is used. 
-+ If pareto is used,  all  compounds from pareto frontier will be selected regardless of their number. 
-+ Note, a  certain portion  of compounds will be selected randomly  if *1>=random_compounds_selection >0.*
-+ *(See random_compounds_selection.)*
+  The larger this number, the more compounds will  be in the final pull of generated compounds (longer time).
+  Desirability function-based  selection pressure at each generation will be lower.
+  Conversely, the smaller - the less compounds will be generated, faster results. 
+  Desirability function-based  selection pressure   at each generation  will be higher.
+
+  NOTES:
+
+  This has effect only when desirability optimization method is used. 
+  If pareto is used,  all  compounds from pareto frontier will be selected regardless of their number. 
+  A  certain portion  of compounds will be selected randomly  if *1>=random_compounds_selection >0.*
+  *(See random_compounds_selection.)*
 + random_compounds_selection - Portion of randomly selected compounds in one generation.  
-+ In case of using desirability the number of these random compounds  will be 
-+ *number_of_selected_compounds * random_compounds_selection* (effectively, lowest-desirability compounds will be 
-+ replaced by random ones to reach desired number). In
-+ case of pareto this will be: *number_of_selected_compounds - number of pareto-selected* (effectively, some compounds will be randomly added 
-+ to reach desired number, if necessary)
+  In the case of using desirability the number of these random compounds  will equal 
+  *number_of_selected_compounds * random_compounds_selection* (effectively, lowest-desirability compounds will be 
+  replaced by random ones to reach desired number). In
+  case of pareto this will be: *number_of_selected_compounds - number of pareto-selected* (effectively, some compounds will be randomly added 
+  to reach desired number, if necessary)
++ descriptors_type - 'sirms' or one of: MG2, bMG2 (Morgan radius 2), AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint)
+TT (topological torsion); or MPNN_fingerprint. Prefix b means binary fingerprint of length 2048. Models  - except MPNN - 
+  should be built using same descriptors,  on molecules with explicit hydrogens (because at descriptor calculation 
+  and crem replacement stages explicit hydrogens are set to be "on" by default).
 + bounded_box - (True/False) use only compounds which are within applicability
-domain 
+  domain
 + properties_chemaxon - (optional) list of atomic properties using with Chemaxon
-tools
+  tools
 + properties_sirms - (optional) list of atomic properties using with SIRMS module
 + properties_calc_contrib - specifies which type of contribution is used for
-calculation of fragments contribution, currently, you can specify "overall" which uses all atomic labels (see SPCI docs).
-+ smart_string - SMARTS pattern  for SIRMS module which defines how
-to fragment compounds.  (bonds matched by SMARTS will be broken - for more details, see RDKit.Chem.rdMMPA docs)
-+ NOTE: Recommended to use default, if you decide to modify it - keep in mind, that breaking bonds with hydrogen atom  
-+ while using fingerprints that ignore hydrogen (AtomPairs) will highly likely 
-+ lead to these hydrogens being selected as worst fragments, because of 0 contributions.
+  calculation of fragments contribution. Matters only for scikit-learn models currently, you can specify 
+  only "overall" which uses all atomic labels (see SPCI docs).
++ smart_string - SMARTS pattern  which defines how
+  to fragment compounds.  (bonds matched by SMARTS will be broken - for more details, see RDKit.Chem.rdMMPA docs)
+  
+  NOTE: Recommended to use default, if you decide to modify it - keep in mind, that breaking bonds with hydrogen atom  
+  while using fingerprints that ignore hydrogen (AtomPairs) will highly likely 
+ lead to these hydrogens being selected as worst fragments, because of 0 contributions.
 + max_cuts - number of maximum cuts used in fragmentation procedure (see RDKit.Chem.rdMMPA docs)
 + radius - how distant a context should be considered while making replacements using CReM module. 
-+ keep_stereo - ***** (True/False) use information about stereochemistry
-of compound
-+ replacement_database - path to database with interchangeable fragments. Note: If invalid database is supplied, no 
-compounds will be generated, and next steps can result in errors.
++ keep_stereo -  (True/False) use information about stereochemistry
+  of compound
++ replacement_database - path to database with interchangeable fragments.
+  NOTE: If invalid database is supplied, no 
+  compounds will be generated, and next steps can result in errors.
 + number_of_worst_fragments - number of fragments which have the
-worst contribution per one compound  in one generation, they're  candidates for replacements. Fragments will be
-+ selected with the following procedure: 1.for each property: normalize contribution usiing sigmoid-like function 
-2. Average all normalized values. Note, certain portion of fragments will be selecteds randomly, 
-3. if 1>=random_fragments_selection >0  *(See random_fragments_selection.)*
+  worst contribution per one compound  in one generation, they're  candidates for replacements. Fragments will be
+  selected with the following procedure: 1.for each property: normalize contribution using sigmoid-like function 
+  2. Average all normalized values.  3. Rank them and choose the lowest. The higher this number - the less effect 
+  *calculaated contributions* will have, that is, the less fragments will be excluded due to unfavorable contributions.
+  NOTE,  if 1>=random_fragments_selection >0  *(See random_fragments_selection.)*, then 
+  certain portion of fragments will be selected randomly
 + random_fragments_selection - ratio of randomly selected fragments
 for one compound in one generation, 1 - completely random selection, 0 -
 all fragments are selected based on normalized contributions.
 + max_frag_size - maximum size of both: fragment to be replaced and new fragment (heavy atom count) (this arg is used only by crem) 
-+ output_format - defines output format, svm or txt for the file with descriptors.
++ output_format - defines output format, svm or txt for the file with descriptors (svm format is more compact).
 + num_of_generation - maximum number of generations. Program will stop, one this is satisfied (unless stopped earlier
 + upon another condition).
 + n_cores - number of cores used for calculation of descriptors and  in CReM replacement.
 + optimization_method -  optimization method to use, i.e. desirability,
 or pareto (not both)
-+ descriptors_type - 'sirms' or one of: MG2, bMG2 (Morgan radius 2), AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint)
-TT (topological torsion); or MPNN_fingerprint. Prefix b means binary fingerprint of length 2048. Models  - except MPNN - 
-+ should be built using same descriptors,  on molecules with explicit hydrogens (because in descriptor calculation 
-+ and crem replacement explicit hydrogens are set to be on by default).
 + store_all_files - (True/False) specifies if you want to store or delete
 intermediate files used for calculations within generations
 + Parameter(s)
+
 – name - name of optimized parameter (biological or physico-chemical property)
+
 – path - path to folder with models pkl files (sklearn models) or checkpoints (Chemprop model)
-– types_of_alg - list of models to choose for prediction of  whole compounds and fragment contributions
-(from available pkl/pt files), e.g. rf, svm, MPNN...
+
+– types_of_alg - list of names of ML methods to use for predictions: rf, svm, gbm, MPNN.
+
+   NOTE: MPNN can be used only alone (in one run of optimization).
+   Other methods can be used in combination, in which case consensus predictions will be used) 
+
 – type_of_model - (reg/class) regression or classification (set according to your pickled models)
-– threshold - desired value of parameter in special format, e.g. "less5",
-"more8", "between-5to3"
-– range - range of possible values of parameter (can be found in activity file 'activity.txt' in model folder)
-– desirability - desirability string. Instruction to define a string:
-The syntax is to use "," to separate continous pieces of desirability function and ':' to separate its domain from its value. 
-Let’s consider an example string '0.5:0,0.8:(1/0.3)*x-(5/3),100:1'. Corresponding function 
-consists of 3 pieces, separated by ",". The first one is defined on interval (-inf, .5) and its value is 0. 
-The second one is defined on interval (0.5, 0.8) and its value is (1/0.3)*x-(5/3). The last one is defined on (.8,100)
-with value equal 1. We need to define only right interval for each continuos piece. Values outside the intervals default to 0.
+
+– threshold - desired (target) nvalue of parameter in following format: "less5",
+  "more8", "between-5to3". This means desired range of values, so, "more8" means you wish to obtain compounds
+  with activity higher than 8.
+
+– range - range of possible values of parameter (if you use SPCI models, it can be calculated from  activity
+  file 'activity.txt' contained  in model folder. It is several orders of magnitude in log scale, e.g. 8...10 for regression 
+  and always between 0...1 for classification.
+
+– desirability - desirability string. Matters iff desirability optimization method is chosen. 
+  Instruction to define a string:
+  The syntax is to use "," to separate continous pieces of desirability function and ':' to separate its domain from
+  its value. Domain is activity values of molecules, and values (desirabilities) are from 0 to 1. 
+
+  Let’s consider an  example string '0.5:0,0.8:(1/0.3)*x-(5/3),100:1'. This si classification case, 
+  so domain is [0...1] Corresponding function 
+  consists of 3 pieces, separated by ",". The first one is defined on interval (-inf, .5) and its value is 0. 
+  The second one is defined on interval (0.5, 0.8) and its value is (1/0.3)*x-(5/3). The last one is defined on (.8,100)
+  with value equal 1 , meaning " starting from activity 0.5 and up to 0.8  desirability of molecules will linearly
+  increase, after which will reach 1 and stabilize. "We need to define only right interval for each continuos piece. Values outside the intervals default 
+  to 0. 
+  The string is related directly to parameter threshold: for instance, if threshold is "more8", then desirability 
+  can be defined for instance as "8:0,9:(x-8),100:1", meaning " starting from activity 8 and up to 9  desirability of molecules will linearly
+  increase, after which will reach 1 and stabilize. "
 
 Building models before running CReM-ML
 --------------------------------------
