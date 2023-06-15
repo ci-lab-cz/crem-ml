@@ -1,7 +1,6 @@
 .idea
-models/
 sdf/
 __pycache__/
 back_log.txt
 tmp/
-replacement_chembl_cuts4_H.db
+

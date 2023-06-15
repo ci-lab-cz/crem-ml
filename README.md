@@ -147,6 +147,8 @@ TT (topological torsion); or MPNN_fingerprint. Prefix b means binary fingerprint
   NOTE: Recommended to use default, if you decide to modify it - keep in mind, that breaking bonds with hydrogen atom  
   while using fingerprints that ignore hydrogen (AtomPairs) will highly likely 
  lead to these hydrogens being selected as worst fragments, because of 0 contributions.
++ protected_ids - field name in sdf file (with structure(s) to be optimized), which contains 0-based ids of atoms,
+  that should not be affected by optimization. For instance, this could be an active scaffold which you  wish to preserve.
 + max_cuts - number of maximum cuts used in fragmentation procedure (see RDKit.Chem.rdMMPA docs)
 + radius - how distant a context should be considered while making replacements using CReM module. 
 + keep_stereo -  (True/False) use information about stereochemistry
