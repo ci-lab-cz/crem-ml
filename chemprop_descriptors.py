@@ -75,6 +75,7 @@ def main_params(in_fname, out_fname, model_path, opt_noH, frag_fname,
     if input_file_extension == 'sdf':
         frags = LoadFragments(frag_fname)
         for k,mod in enumerate(models):
+            mod.eval()
             mols = None
             mols = OrderedDict()  # key - molname, val- mol; if frags: key - molname or mol+fragname, val-mol for mol or part b
             for i, m in enumerate(Chem.SDMolSupplier(in_fname, removeHs=False)):
