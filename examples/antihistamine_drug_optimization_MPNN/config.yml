@@ -5,6 +5,7 @@ seed_structure: examples/antihistamine_drug_optimization_MPNN/decloxizine_seed.s
 number_of_selected_compounds: 20
 random_compounds_selection: 0
 descriptors_type: MPNN_fingerprint 
+multitask: False
 bounded_box: False
 properties_calc_contrib: overall
 smart_string: '[!#1]!@!=!#[!#1]'
@@ -15,6 +16,8 @@ keep_stereo: False
 replacement_database:  /home/maria/pavel/replacements02_sa2.db
 number_of_worst_fragments: 8
 random_fragments_selection: 0
+min_inc: -2
+max_inc:2
 max_frag_size: 7
 output_format: txt
 num_of_generation: 5

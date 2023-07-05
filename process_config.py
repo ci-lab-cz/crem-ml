@@ -19,6 +19,7 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['number_of_selected_compounds', 'fill only if desirability is specified'], # TODO  check this instruction in code logic
                     ['random_compounds_selection', '0'],  # from 0 - 1, 0.2 means 20% of selected compounds are chosen randomly (floored)
                     ['descriptors_type','type of descriptors to use'],
+                    ['multitask', 'True or False'],  # False
                     ['bounded_box', 'True or False'],  # True
                     ['properties_chemaxon', 'fill'],  # 'charge logp acc don refractivity'
                     ['properties_sirms', 'fill'],  # 'CHARGE LOGP HB REFRACTIVITY'
@@ -32,6 +33,8 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['replacement_database', 'path_to_database_with_replacement'],
                     ['number_of_worst_fragments', 'fill'],
                     ['random_fragments_selection', '0'],  # from 0 - 1, 0.2 means 20% of selected fragments are chosen randomly (floored)
+                    ['min_inc', 'fill'],
+                    ['max_inc', 'fill'],
                     ['max_frag_size', 'fill'],
                     ['output_format', 'svm'],
                     ['num_of_generation', 'fill'],
@@ -123,6 +126,7 @@ def test_config(input_config: str) -> Dict:
         # check settings with numbers
         elif (key == 'n_cores') or (key == 'max_cuts') \
             or (key == 'radius') or (key == 'number_of_worst_fragments') \
+            or (key == 'min_inc') or (key == 'max_inc')\
             or (key == 'max_frag_size') or (key == 'num_of_generation') \
             or (key == 'num_output_compounds'):
                 try:
@@ -151,6 +155,13 @@ def test_config(input_config: str) -> Dict:
                "they are meaningful only for sirms")
     if config ['output_format'] != "txt" and config ['descriptors_type'] == "MPNN_fingerprint":
         print( "Note, any non-txt 'output_format' will be overridden by 'txt' when MPNN models are used.")
+
+    if config ['bounded_box']  and config ['descriptors_type'] == "MPNN_fingerprint":
+        print( "Note, bounding box is ignored when MPNN models are used.")
+
+    if config ['multitask']  and config ['descriptors_type'] != "MPNN_fingerprint":
+        print( "Note, parameter 'multitask' is ignored (has no effect) when models other than MPNN are used.")
+
 
     acceptable_descr = [ 'sirms','MG2','AP','RDK','TT','bMG2','bAP','bRDK', 'MPNN_fingerprint']
     assert sum([config['descriptors_type'] == i for i in acceptable_descr]) == 1
