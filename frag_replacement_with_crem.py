@@ -64,7 +64,7 @@ def read_worst_and_ids(input_worst, input_ids):
 
 def make_replacements(mol, prot_ids, df_of_fragments, path_to_db,
                         radius,
-
+min_inc, max_inc,
                         max_size):
         products = []
         try:
@@ -87,8 +87,8 @@ def make_replacements(mol, prot_ids, df_of_fragments, path_to_db,
                         max_rel_size=1,
                         max_replacements=None,
                         replace_cycles=False,
-                        min_inc=-2,
-                        max_inc=2,
+                        min_inc=min_inc,
+                        max_inc=max_inc,
                         min_freq=0,
                         protected_ids=protected_ids,
                         symmetry_fixes=False,
@@ -115,7 +115,7 @@ def make_replacements(mol, prot_ids, df_of_fragments, path_to_db,
             pass
         return products
 
-def make_replacements_mp(input_sdf, input_worst, input_ids, path_to_db, radius, max_size, ncores, prot_ids=None):
+def make_replacements_mp(input_sdf, input_worst, input_ids, path_to_db, radius, min_inc, max_inc, max_size, ncores, prot_ids=None):
     Chem.SetDefaultPickleProperties(Chem.PropertyPickleOptions.AllProps) # mp for molobjects with props
     p = Pool(ncores)
 
@@ -124,15 +124,15 @@ def make_replacements_mp(input_sdf, input_worst, input_ids, path_to_db, radius, 
     df_of_fragments = read_worst_and_ids(input_worst, input_ids)
     print(df_of_fragments)
     for res in p.imap_unordered(partial(make_replacements, prot_ids=prot_ids, df_of_fragments=df_of_fragments, path_to_db=path_to_db,
-                        radius=radius, max_size=max_size), compounds):
+                        radius=radius, min_inc=min_inc, max_inc = max_inc, max_size=max_size), compounds):
         new_products.extend(res)
     return new_products
 
 
-def main(input_sdf, input_worst, input_ids, path_to_db, radius,max_size,  output_product_file, ncores,prot_ids):
+def main(input_sdf, input_worst, input_ids, path_to_db, radius,min_inc, max_inc, max_size,  output_product_file, ncores,prot_ids):
 
     print('Replacing fragments ...')
-    products = make_replacements_mp(input_sdf, input_worst, input_ids, path_to_db, radius,max_size, ncores,prot_ids)
+    products = make_replacements_mp(input_sdf, input_worst, input_ids, path_to_db, radius,min_inc, max_inc,max_size, ncores,prot_ids)
     w = Chem.SDWriter(output_product_file)
     for m in products:
         w.write(m)
@@ -157,4 +157,4 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     main(args['in_sdf'], args['in_worst'], args['in_ids'],
-         args['in_con'], args['radius'], args['max_frag_size'],args['out_compounds'],args['ncores'], args['prot_ids'])
+         args['in_con'], args['radius'],args['min_inc'],args['max_inc'], args['max_frag_size'],args['out_compounds'],args['ncores'], args['prot_ids'])

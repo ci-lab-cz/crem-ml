@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import re
 
 from subprocess import call
 import sqlite3 as lite
@@ -268,7 +269,7 @@ def calculate_fingerprints(input_sdf_file: str,
     if fingerprint_type == "MPNN_fingerprint": # mpnn fingerprint
         chemprop_descriptors.main_params( in_fname=input_sdf_file,    # input
                           out_fname=x_fname,        # output
-                          opt_noH=True, #  MPNN fingerprint with hs may  lead  (?) to wrong predictions
+                          opt_noH=True, #  MPNN fingerprint with hs  leads  to wrong predictions, regardless of how was built (Hs in data/model)
                           frag_fname=fragments_ids,
                           per_atom_fragments=False,
                           id_field_name=id_field_name,
@@ -363,7 +364,7 @@ def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
                                    out_fname=x_fname,
                                    file_format=output_format)
 
-def predict_properties(parameters: List, descriptors_fname: str, output_format: str) -> None:
+def predict_properties(parameters: List, descriptors_fname: str, output_format: str, multitask:bool) -> None:
     """
     Creates summarized file with predictions
 
@@ -382,6 +383,7 @@ def predict_properties(parameters: List, descriptors_fname: str, output_format: 
                              out_fname=output_file_name,
                              model_dir=parameter['path'],
                              model_type=parameter['type_of_model'],
+                             multitask=multitask,
                              # ad# uncertainty? bb?,
                              )
         else:
@@ -423,7 +425,7 @@ def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
 
 def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
                       models_dir: List, models_type: List,
-                      properties_calc_contrib: List, in_format: str) -> None:
+                      properties_calc_contrib: List, in_format: str, multitask: bool=False) -> None:
     """
     Calculate contributions of fragments. All records in list must be specified
     in same order.
@@ -441,7 +443,6 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
         # todo : need abiltiy of handling chunks in sirmsfile - for cases when too few frags were generated,  we need higher value
 
         print("Fragment contribution for {} started".format(parameter))
-
         if type_of_alg == ["MPNN"]:
             chemprop_frag_contrib.main_params(
                 x_fname=x_fname,
@@ -449,6 +450,7 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
                         'contrib_{}.txt'.format(parameter)),
                 model_dir=model_dir,
                 model_type=model_type,
+                multitask=multitask,
                 save_pred=False)
 
         else:
@@ -484,3 +486,11 @@ def parse_threshold(thresholds: List) -> List:
             threshold_match.append(
                 ['between', float(threshold[7:].split('to')[0]), float(threshold[7:].split('to')[1])])
     return threshold_match
+
+def retrieve_out_fname_param(out_fname):
+
+    # retrieve param name from file name in order to index out by current column with prop
+    out_name_param = re.sub("predictions_", "", os.path.basename(out_fname))  # if out fname is compoundspreds
+    out_name_param = re.sub("contrib_", "", out_name_param)  # if out fname is frags contribs
+    out_name_param = re.sub(".txt", "", out_name_param)  # final stripped  name of param
+    return out_name_param

@@ -132,7 +132,11 @@ properties, required  only if SIRMS descriptors are used and  *properties_sirms 
 + descriptors_type - 'sirms' or one of: MG2, bMG2 (Morgan radius 2), AP, bAP (atom-pair), RDK, bRDK (2-4 atoms RDK fingerprint)
 TT (topological torsion); or MPNN_fingerprint. Prefix b means binary fingerprint of length 2048. Models  - except MPNN - 
   should be built using same descriptors,  on molecules with explicit hydrogens (because at descriptor calculation 
-  and crem replacement stages explicit hydrogens are set to be "on" by default).
+  and crem replacement stages explicit hydrogens are set to be "on" by default). For MPNN fingerprints explicit hydrogens 
+  are always removed from molecules (only this leads to correct result, no matter how models were built).
++ multitask -  (True/False) intended to be True with MPNN multitask models. Otherwise - has no effect: use False. 
+  
+  NOTE: if models are single task and multitask = True, or model is multitask and multitask=False - error will be thrown
 + bounded_box - (True/False) use only compounds which are within applicability
   domain
 + properties_chemaxon - (optional) list of atomic properties using with Chemaxon
@@ -151,6 +155,10 @@ TT (topological torsion); or MPNN_fingerprint. Prefix b means binary fingerprint
   that should not be affected by optimization. For instance, this could be an active scaffold which you  wish to preserve.
 + max_cuts - number of maximum cuts used in fragmentation procedure (see RDKit.Chem.rdMMPA docs)
 + radius - how distant a context should be considered while making replacements using CReM module. 
++ min_inc - minimal increase in size of fragment while making replacements using CReM module. If not specified,  
+ the default is -2 heavy atoms. This means that new fragment can have 2 atoms less than the one replaced. 
++ max_inc - miaximal increase in size of fragment while making replacements using CReM module. The default is +2 heavy atoms.
+  This means that new fragment can have 2 atoms more than the one replaced. 
 + keep_stereo -  (True/False) use information about stereochemistry
   of compound
 + replacement_database - path to database with interchangeable fragments.
