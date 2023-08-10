@@ -1,28 +1,24 @@
 working_dir:
 num_output_compounds: 100
-setup_file: /home/maria/crem-ml/setup.txt
-std_rules: /home/maria/crem-ml/std_rules.xml
-chemaxon: /usr/local/bin
 seed_structure:
 number_of_selected_compounds: 10
 random_compounds_selection: 0
 descriptors_type:
+multitask:
 bounded_box: True
-properties_chemaxon: charge logp acc don refractivity
-#properties_sirms: CHARGE LOGP HB REFRACTIVITY
-properties_sirms: elm
-properties_calc_contrib: overall
-smart_string: '[#6+0;!$(*=,#[!#6])]!@!=!#[*]'
+smart_string: '[!H]!@!=!#[*]'
 max_cuts: 3
 radius: 2
 keep_stereo: False
 replacement_database: replacements02_sa2.db.gz
 number_of_worst_fragments: 10
 random_fragments_selection: 0
+min_inc: -2
+max_inc: 2
 max_frag_size: 8
 output_format: svm
 num_of_generation: 10
-n_cores: 10
+n_cores:
 optimization_methods: desirability
 store_all_files: True
 param_0:
