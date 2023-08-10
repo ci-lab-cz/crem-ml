@@ -138,7 +138,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                                         )
                     # predict properties based on  x.txt of 1 st param;  for all paramas ( because model predict all properties at once)
                     fragments_fname = os.path.join(generation_dir, str(parameters_list_dicts[0]['name'])+'_MPNN_fingerprint_x.txt')
-                    optimizer_utils.predict_properties([ parameters_list_dicts[0]],# even if [0], model predict all tasks at once
+                    optimizer_utils.predict_properties([ parameters_list_dicts[0]],# even though [0], model predict all tasks at once
                                                        fragments_fname,
                                                        settings['output_format'],
                                                        settings['multitask']
@@ -250,7 +250,6 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                                           [parameters_list_dicts[i]['types_of_alg']],
                                                           [mpnn_path],
                                                           [parameters_list_dicts[i]['type_of_model']],
-                                                          settings['properties_calc_contrib'],
                                                           settings['output_format'],
                                                           settings['multitask']
                                                           )
@@ -268,12 +267,12 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
 
                     new_fragments_fname = os.path.join(generation_dir, str(parameters_list_dicts[0]['name'])+'_MPNN_fingerprint_new_x.txt')
                     # calc contrib using new_x.txt of 1st parameter;  for all paramas  (because model predicts all properties at once)
-                    optimizer_utils.calc_frag_contrib(new_fragments_fname, # even if [0], model predict all tasks at once
+                    optimizer_utils.calc_frag_contrib(new_fragments_fname, # even though [0], model predict all tasks at once
                                                           [param_name],
                                                            [parameters_list_dicts[0]['types_of_alg']],
                                                           [mpnn_path],
                                                           [parameters_list_dicts[0]['type_of_model']],
-                                                          settings['properties_calc_contrib'],
+
                                                           settings['output_format'],
                                                           settings['multitask']
                                                       )
@@ -309,7 +308,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                           [parameter['types_of_alg'] for parameter in parameters_list_dicts],
                                           [parameter['path'] for parameter in parameters_list_dicts],
                                           [parameter['type_of_model'] for parameter in parameters_list_dicts],
-                                          settings['properties_calc_contrib'],
+
                                           settings['output_format'])
 
         # find worst fragments

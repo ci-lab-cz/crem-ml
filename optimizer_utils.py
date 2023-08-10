@@ -269,7 +269,7 @@ def calculate_fingerprints(input_sdf_file: str,
     if fingerprint_type == "MPNN_fingerprint": # mpnn fingerprint
         chemprop_descriptors.main_params( in_fname=input_sdf_file,    # input
                           out_fname=x_fname,        # output
-                          opt_noH=True, #  MPNN fingerprint with hs  leads  to wrong predictions, regardless of how was built (Hs in data/model)
+                          opt_noH=True, #  MPNN fingerprint with Hs  leads  to wrong predictions, regardless of how was built (Hs in data/model)
                           frag_fname=fragments_ids,
                           per_atom_fragments=False,
                           id_field_name=id_field_name,
@@ -364,7 +364,7 @@ def calculate_sirms_descriptors(input_sdf_file: str, setup_file: str,
                                    out_fname=x_fname,
                                    file_format=output_format)
 
-def predict_properties(parameters: List, descriptors_fname: str, output_format: str, multitask:bool) -> None:
+def predict_properties(parameters: List, descriptors_fname: str, output_format: str, multitask:bool=False) -> None:
     """
     Creates summarized file with predictions
 
@@ -425,7 +425,7 @@ def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
 
 def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
                       models_dir: List, models_type: List,
-                      properties_calc_contrib: List, in_format: str, multitask: bool=False) -> None:
+                     in_format: str, multitask: bool=False) -> None:
     """
     Calculate contributions of fragments. All records in list must be specified
     in same order.
@@ -435,7 +435,6 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
     :param types_of_alg: list with types of alg used for predictions, e.g. [['rf', 'svm'], ['rf']]
     :param models_dir: list of paths to models directories
     :param models_type: list of types of models, e.g. ['reg', 'class']
-    :param properties_calc_contrib: ******NOT SURE****** list, e.g.['overall']
     :param: in_format: ******NOT SURE****** 'svm'
     """
 
@@ -459,7 +458,7 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
                                                         'contrib_{}.txt'.format(parameter)),
                                  model_names=type_of_alg,
                                  model_dir=model_dir,
-                                 prop_names=properties_calc_contrib,
+                                 prop_names='overall',
                                  model_type=model_type,
                                  activity_file=None,
                                  verbose=False,

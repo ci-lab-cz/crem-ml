@@ -7,7 +7,6 @@ random_compounds_selection: 0
 descriptors_type: MPNN_fingerprint 
 multitask: False
 bounded_box: False
-properties_calc_contrib: overall
 smart_string: '[!#1]!@!=!#[!#1]'
 protected_ids: 'protected_ids'
 max_cuts: 3

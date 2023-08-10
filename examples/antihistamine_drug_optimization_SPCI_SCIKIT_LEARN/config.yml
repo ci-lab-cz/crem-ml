@@ -7,7 +7,6 @@ random_compounds_selection: 0
 descriptors_type: AP 
 multitask:  False
 bounded_box: True
-properties_calc_contrib: overall
 smart_string: '[!#1]!@!=!#[!#1]'
 protected_ids: 'protected_ids'
 max_cuts: 3

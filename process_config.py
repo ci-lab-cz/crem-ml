@@ -23,7 +23,6 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['bounded_box', 'True or False'],  # True
                     ['properties_chemaxon', 'fill'],  # 'charge logp acc don refractivity'
                     ['properties_sirms', 'fill'],  # 'CHARGE LOGP HB REFRACTIVITY'
-                    ['properties_calc_contrib', 'fill'],  # 'overall'
                     ['smart_string', "'[#6+0;!$(*=,#[!#6])]!@!=!#[*]'"],
                     ['protected_ids', 'protected_ids'],
                     # field in seed sdf, containing atom ids that should not be touched by replacements (default name, or specify as arg)
@@ -144,8 +143,7 @@ def test_config(input_config: str) -> Dict:
             assert isinstance(num, float), "{} is not defined properly".format(key)
             config[key] = num
         # strip properties for chemaxon and sirms
-        elif (key == 'properties_chemaxon') or (key == 'properties_sirms') \
-           or (key == 'properties_calc_contrib'):
+        elif (key == 'properties_chemaxon') or (key == 'properties_sirms'):
             config[key] = value.split(" ")
 
     assert(not('protected_ids' in config and 'std_rules' in config)) # never standardize if use prot ids, leads to index disordering

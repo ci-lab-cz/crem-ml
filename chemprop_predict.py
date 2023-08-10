@@ -93,7 +93,7 @@ def main_params(x_fname,
     else:
         outs = pd.DataFrame(pd.concat((fp_names.Compounds, pd.DataFrame(outs, columns=prop_names)), axis=1))
 
-    outs["bound_box"] = 1
+    outs["bound_box"] = 1 # TODO: add ad
     # write down file for each property - if multitask
     if not multitask:
         outs["consensus"] = outs[prop_names[0]]# there should be only 1 property
