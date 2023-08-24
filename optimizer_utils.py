@@ -86,14 +86,14 @@ def create_database(working_dir: str, parameter_to_optimize: List) -> str:
 
 def add_mols_into_db(input_sdf: str, database: str, gen: int) -> int:
     """
-    Read input sdf file, convert all mols into smiles, check if they are in DB,
-    and if not add them with all possible options, such as transformation rules,
+    Read input sdf file, convert all molecules into smiles, check if they are in DB,
+    and if not add them with all possible properties (fields), such as transformation rules,
     parents, number of generation and so on.
 
     :param input_sdf: path to input sdf file
     :param database: path to output database
     :param gen: actual generation of optimization
-    :return: number of compounds in database
+    :return: number of compounds added to database
     """
 
     num_of_compounds = 0
@@ -458,7 +458,7 @@ def calc_frag_contrib(x_fname: str, parameters: List, types_of_alg: List,
                                                         'contrib_{}.txt'.format(parameter)),
                                  model_names=type_of_alg,
                                  model_dir=model_dir,
-                                 prop_names='overall',
+                                 prop_names=['overall'],
                                  model_type=model_type,
                                  activity_file=None,
                                  verbose=False,

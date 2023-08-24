@@ -256,23 +256,25 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
          optimization_method, thresholds, ad, desirabilities=[],
          n_compounds=0, random_compounds=0, brute_force=False):
     """
-    Logic algorithm:
+    Logic of algorithm:
     1. if brute force - save all compounds to out_fname.
     2. Otherwise:
       - calc distances
-      - filter out and save compounds with all(dist <= 0)
+      - filter out and save compounds with all(distance <= 0)
       - add them to db
-      - find outneeded number of random compounds
+      - find out needed number of random compounds
       -  if PARETO:
-        - run pareto on compounds NOT in all(dist <= 0) (i.e. any(dist>0))
-        - select all compounds from the pareto frontier
+        - in a loop: run pareto on compounds "NOT in all(dist <= 0)" (i.e. compounds "in  any(dist > 0)") and
+        - select all compounds from pareto frontier of 1st, second...etc orders - until reach specified {n_compounds - random_compounds}
+         
       -if DESIRABILITY:
         - filter out    any(dist>0)
         - if less then  specified  n_compounds: take them all
         - else:
-            - compute desirability
-            - if random_compounds: take only top (best) {1-random compounds needed number}
-     - add sample from any(dist > 0) & not in already selected - sample size = random compounds needed number
+            - compute desirability and rank compounds
+            - if random_compounds: take only top {n_compounds - random compounds needed number}
+     - add sample from any(dist > 0) & not in already selected; sample size = random compounds needed number
+     (i.e. n_compounds * random_compounds)
      - save
     """
     print('Processing predictions ...')
@@ -311,18 +313,28 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                         output_filtering)
         update_database(out_database, prepare_working_arr(in_pred, parameters, False), output_filtering)
 
+        # calc random compounds needed number
         n_random = math.floor(n_compounds * random_compounds) #  will be used later
 
-        if optimization_method == 'pareto': # n_compounds has no effect, select only and all pareto points TODO second order
+        if optimization_method == 'pareto':
 
                 # use compounds which are not in threshold
                 distance_predictions = distance_predictions[distance_predictions.apply(lambda x:  np.any(x>0), axis=1)]
                 # get list of indexes from pareto frontier
-                pareto = pareto_alg.is_pareto_efficient_simple(distance_predictions.loc[:,parameters].values)
-                selected_compounds_index = predictions.loc[distance_predictions.iloc[pareto].index].index
-                # print(selected_compounds_index, "best par")
-                # print( distance_predictions.loc[selected_compounds_index])
 
+                # repeat finding pareto frontier adding each time points from next  frontier - "second order", "third order"..
+                selected_compounds_index = []
+                pareto = np.zeros((distance_predictions.shape[0],), dtype=bool)# init with all false to use its inverse  each time
+                # keep adding compounds from next order fronier until n_compounds is reached (reduced by n_random) or until
+                # no more compounds left to select from
+                while (sum(pareto) < (n_compounds-n_random)) and ( sum(pareto) < distance_predictions.shape[0]):
+                    pareto_new = pareto_alg.is_pareto_efficient_simple(distance_predictions.loc[~pareto,parameters].values)
+                    # by selecting "~" change some of False points to True - new order frontier. Old True points remain
+                    pareto[~pareto] = pareto_new
+                selected_compounds_index = predictions.loc[distance_predictions.iloc[pareto].index].index
+
+                print(selected_compounds_index, "best pareto")
+                # print( distance_predictions.loc[selected_compounds_index])
 
         elif optimization_method == 'desirability':
 
@@ -347,7 +359,7 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                     print(selected_compounds_index, "best des")
                     if random_compounds > 0:
 
-                        selected_compounds_index = selected_compounds_index[:-n_random]
+                        selected_compounds_index = list(selected_compounds_index[:-n_random])
                         print(selected_compounds_index, "best des -random (check the 'head')")
 
 
@@ -356,26 +368,21 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                 print('Unspecified optimization method!')
 
 
-        if len(selected_compounds_index) < n_compounds:# add random if: 1. pareto had too few; 2. des sued with random_cmpds>0
+        if random_compounds > 0:
+            if len(selected_compounds_index) < n_compounds:
 
-            predictions_diff = predictions.loc[predictions.index.difference(selected_compounds_index)]
-            print(predictions_diff, "pred_diff")
+                predictions_diff = predictions.loc[predictions.index.difference(selected_compounds_index)]
+                # print(predictions_diff, "pred_diff")
 
-            predictions_diff = predictions_diff.loc[predictions_diff.index.difference(output_filtering.index)]
-            print(predictions_diff, "pred_diff")
-            print(selected_compounds_index)
-            if predictions_diff.shape[0]>0: # any data available
-                print( random.sample(list(predictions_diff.index), n_random))
-                selected_compounds_index = selected_compounds_index.append(
+                predictions_diff = predictions_diff.loc[predictions_diff.index.difference(output_filtering.index)]
+                if predictions_diff.shape[0]>0: # any data available
+                    selected_compounds_index = selected_compounds_index.append(
                                                  predictions_diff.sample( n=n_random).index )
-
-            print(selected_compounds_index)
         # save selected compounds
 
-        print(predictions.loc[list(selected_compounds_index)])
         save_output(in_sdf,
                     out_fname,
-                    predictions.loc[list(selected_compounds_index)])
+                    predictions.loc[selected_compounds_index])
 
 
 
