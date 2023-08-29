@@ -333,7 +333,11 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
         new_compouds = os.path.join(generation_dir, '{}_gen_compounds.sdf'.format(gen))
         if 'protected_ids' not in settings:
             settings['protected_ids'] = None
-        print(settings['protected_ids'])
+        if 'min_inc' not in settings:
+            settings['min_inc'] = -2
+        if 'max_inc' not in settings:
+            settings['max_inc'] = 2
+        # print(settings['protected_ids'])
         frag_replacement.main(settings['processed_predictions_file'],
                                         settings['worst_fragments_file'],
                                         settings['fragments_ids_file'],
