@@ -107,7 +107,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
             # calculation of  fingerprints
 
             if settings['descriptors_type'] == "MPNN_fingerprint":
-                if not settings["multitask"]:
+                if "multitask" not in settings or not settings["multitask"]: # default multitask is False
                     for i, dict in enumerate(parameters_list_dicts): # over parameters
                         # set path with mpnn model;
                         mpnn_path = parameters_list_dicts[i]['path']
@@ -126,7 +126,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                         optimizer_utils.predict_properties([parameters_list_dicts[i]],  # take only current param in []
                                                            fragments_fname,
                                                            settings['output_format'],
-                                                           settings['multitask']
+
                                                            )
                 else: #multitask
                     mpnn_path = parameters_list_dicts[0]['path'] #  they allhave same path
@@ -229,7 +229,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
 
         else:
             if settings['descriptors_type'] == 'MPNN_fingerprint':
-                if not settings['multitask']:
+                if "multitask" not in settings or not settings["multitask"]: # default multitask is False
                     for i, dict in enumerate(parameters_list_dicts):
                         # set path with mpnn model
                         mpnn_path = parameters_list_dicts[i]['path']
@@ -251,7 +251,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                                           [mpnn_path],
                                                           [parameters_list_dicts[i]['type_of_model']],
                                                           settings['output_format'],
-                                                          settings['multitask']
+
                                                           )
 
                 else: # multitask
