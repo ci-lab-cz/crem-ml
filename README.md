@@ -6,26 +6,26 @@ Overview
 Name *CReM-ML* is derived from  *CReM: Chemically reasonlble mutations* and *ML: machine learning*. The method is an iterative 
 compound optimizer based on ML models (QSAR) and employing Pareto-frontier or desirability-functions for compound selection.
 The concept of  *XAI (explainable Artificial Intelligence)* is employed. Model explanations (a.k.a. model interpretation) allow to determine the influence of molecular 
-fragments on their properties. Based on these explanations molecules are modified by replacing some fragments. This (ideally) leads to moleules with improved properties.
+fragments on their properties. Based on these explanations molecules are modified by replacing certain fragments using pre-generated database. This (ideally) leads to molecules with improved properties.
 
 
-The workflow consists of three parts, which  run in a loop:
+The workflow consists of three parts, which  are repeated in a loop:
 + Preparation part
 + Compound part
 + Fragment part
 Once the user has defined optimization goal - i.e. target values (ranges) of properties to be reached and desired number of compounds, the optimizer can be started.
 Preparation part performs testing of the input data, configuration file, and  setting up the environment.
 Compound part works with compounds: it optionally standardizes
-compounds, selects the most promising ones and checks whether some compounds match the goal criteria; then possibly stops the 
-optimization loop (if there is sufficient number of compounds satisfying specified values of properties).
-Fragment part modifies compounds by  working with fragments of compounds.
-It calculates their contributions to target properties (also called "parameters" in the configuration file) by means of XAI.
-Then, it tests these fragments' contributions
+compounds, selects the most promising ones and checks whether some compounds match the goal criteria; then possibly the 
+optimization loop stops (if there is enough compounds satisfying specified values of properties).
+Fragment part modifies compounds by  working with their fragments.
+It calculates fragments' contributions to target properties (called "parameters" in the configuration file) by means of XAI.
+Then, the program tests these fragments' contributions
 against desired profile and decides whether to replace each given fragment or leave it as it is.
-The result of this replacement stage is a pool of new compounds ("generation"). 
+The result of this replacement stage is a pool of new compounds: "generation". 
 Those compounds  proceed again to the loop: *preparation part -> compound part -> fragment part*.
 Program stops when either holds: 
-- yielded compound pool with desired properties  is >= to specified number (stored fore every generation in *output_match.sdf*);
+- yielded compound pool with desired properties  is greater or equal to specified number (stored fore every generation in *output_match.sdf*);
 - Maximum specified number of generations is reached;
 - There are no new unique compounds after most recent  generation.
 
@@ -109,7 +109,7 @@ To use CReM-ML  you need a database with interchangeable fragments, several vers
 http://www.qsar4u.com/pages/crem.php. (Currently recommended is replacements02_sa2.db.gz.)
 
 
-Config file structure and description of input  parameters. 
+Config.yml file structure and description of input  parameters. 
 ----------------------------------------------------------
 
 + working_dir - path to directory where all outputs are going to be stored

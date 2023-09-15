@@ -7,4 +7,4 @@ To run this example, type in command line
 
 $ cd crem-ml
 $ conda activate crem_ml_env
-$ python optimizer.py -i examples/antihistamine_drug_optimization_MPNN/config.yml
+$ python optimizer.py -i examples/antihistamine_drug_optimization_MPNN/input_config.yaml
