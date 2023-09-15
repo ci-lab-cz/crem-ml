@@ -13,6 +13,7 @@ The workflow consists of three parts, which  are repeated in a loop:
 + Preparation part
 + Compound part
 + Fragment part
+
 Once the user has defined optimization goal - i.e. target values (ranges) of properties to be reached and desired number of compounds, the optimizer can be started.
 Preparation part performs testing of the input data, configuration file, and  setting up the environment.
 Compound part works with compounds: it optionally standardizes
@@ -88,8 +89,9 @@ Main script is called *optimizer.py*.
 Create a config file. For quick-start template *config.yml* with default parameters can be used
 User needs to enter only task-specific parameters, i.e. working directory, model paths, in case of using desirability for selection -  desirability strings
 (instructons how to create a string - see *Config file structure and description of input  parameters.*) etc.
-Example configs for some tasks 
-are provided as well in examples folder.
+Example configs for  several use-cases are provided as well in 'examples/' folder, together with all the input data to run those cases.
+
+`example_crem_ml.ipynb` contains an example of optimization and analysis of results.
 
 Activate conda environment:
 
