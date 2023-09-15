@@ -1,40 +1,40 @@
 
-working_dir:  examples/antihistamine_drug_optimization_SPCI_SCIKIT_LEARN
-num_output_compounds: 10
-seed_structure:  examples/antihistamine_drug_optimization_SPCI_SCIKIT_LEARN/decloxizine_seed.sdf
+working_dir: examples/antihistamine_drug_optimization_MPNN/
+num_output_compounds: 50
+seed_structure: examples/antihistamine_drug_optimization_MPNN/decloxizine_seed.sdf
 number_of_selected_compounds: 20
 random_compounds_selection: 0
-descriptors_type: AP 
-multitask:  False
-bounded_box: True
+descriptors_type: MPNN_fingerprint 
+multitask: False
+bounded_box: False
 smart_string: '[!#1]!@!=!#[!#1]'
 protected_ids: 'protected_ids'
 max_cuts: 3
 radius: 2
 keep_stereo: False
 replacement_database:  /home/maria/pavel/replacements02_sa2.db
-number_of_worst_fragments: 8
+number_of_worst_fragments: 6
 random_fragments_selection: 0
 min_inc: -2
 max_inc: 2
 max_frag_size: 7
-output_format: svm
+output_format: txt
 num_of_generation: 5
 n_cores: 10
 optimization_method: desirability
 store_all_files: True
 param_0:
   name: 231
-  path:  examples/models/231_spci_sklearn_atompairs_fp/
-  types_of_alg: rf gbm
+  path:  examples/models/231_checkpoints/
+  types_of_alg: MPNN
   type_of_model: reg
-  threshold: more7.2
+  threshold: more7.6
   range: 6.3
   desirability: 6:0,10:0.25*x-1.5,100:1
 param_1:
   name: logbb
-  path: examples/models/logbb_spci_sklearn_atompairs_fp/
-  types_of_alg: rf gbm
+  path: examples/models/logbb_checkpoints
+  types_of_alg: MPNN
   type_of_model: class
   threshold: less0.5
   range: 1
