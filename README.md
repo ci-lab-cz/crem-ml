@@ -52,9 +52,9 @@ The performance of optimizer directly and critically depends on their quality. I
 
 Installation
 -------------
-All the required packages can be installed by creating conda environment from a file provided here: env_no_builds.yml.
+All the required packages can be installed by creating conda environment from a file provided here: crem_ml_env_py370.yml.
 
-`conda env create -f env_no_builds.yml`
+`conda env create -f crem_ml_env_py370.yml`
 
 Alternatively, installation of the following packages can be also  done manually:
 + joblib
@@ -63,7 +63,6 @@ Alternatively, installation of the following packages can be also  done manually
 + crem
 + spci
 + rdkit
-+ sirms
 + sympy
 + sqlite
 + matplotlib
@@ -72,12 +71,14 @@ Alternatively, installation of the following packages can be also  done manually
 + Chemprop (https://github.com/chemprop/chemprop)  (required in case of using Chemprop QSAR models) 
 + Optionally - to use Chemprop with GPU -  cuda >= 8.0 ; cuDNN
 + Optionally - Chemaxon command line tools: cxcalc, standardizer   
++ optionally - jupyter notebook, if you want run crem_ml_example.ipynb
 
 
 Packages  crem and  spci  can be installed using *pip* or downloaded from github:
-https://github.com/DrrDom/sirms.git. 
+https://github.com/DrrDom/crem.git 
 https://github.com/DrrDom/spci.git
-
+Chemprop can be installed using *pip* or downloaded from github https://github.com/chemprop/chemprop
+Rdkit can be installed using conda from rdkit channel:  conda install rdkit -c rdkit
 Chemaxon tools (optional) can be installed from https://chemaxon.com/
 
 All other packages can be installed using *conda* or *pip*. 
@@ -95,7 +96,7 @@ Example configs for  several use-cases are provided as well in 'examples/' folde
 
 Activate conda environment:
 
-`$ conda activate crem_ml_env`
+`$ conda activate crem_ml_env_py370`
 
  and run:
 
