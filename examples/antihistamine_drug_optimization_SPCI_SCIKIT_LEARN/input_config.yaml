@@ -12,7 +12,7 @@ protected_ids: 'protected_ids'
 max_cuts: 1
 radius: 2
 keep_stereo: False
-replacement_database:  /home/maria/pavel/replacements02_sa2.db
+replacement_database:   examples/replacements02_sa2.db
 number_of_worst_fragments: 6
 random_fragments_selection: 0
 min_inc: -2
