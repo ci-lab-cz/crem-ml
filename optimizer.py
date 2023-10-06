@@ -216,7 +216,9 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                          settings['max_cuts'],
                                          # settings['radius'], # todo is it safe to not to use it at all?
                                          settings['keep_stereo'],
-                                         error_fname_frag)
+                                         error_fname_frag,
+                                         settings['only_heavy']
+                                         )
         if settings['descriptors_type'] == 'sirms':
             # calculate sirms descriptors of fragments
             optimizer_utils.calculate_sirms_descriptors(settings['processed_predictions_file'],
@@ -335,6 +337,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
             settings['protected_ids'] = None
         if 'min_inc' not in settings:
             settings['min_inc'] = -2
+            print("no_min", settings['min_inc'])
         if 'max_inc' not in settings:
             settings['max_inc'] = 2
         # print(settings['protected_ids'])

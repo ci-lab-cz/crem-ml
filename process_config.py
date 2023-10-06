@@ -24,6 +24,7 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['properties_chemaxon', 'fill'],  # 'charge logp acc don refractivity'
                     ['properties_sirms', 'fill'],  # 'CHARGE LOGP HB REFRACTIVITY'
                     ['smart_string', "'[#6+0;!$(*=,#[!#6])]!@!=!#[*]'"],
+                    ['only_heavy', "True or False"],
                     ['protected_ids', 'protected_ids'],
                     # field in seed sdf, containing atom ids that should not be touched by replacements (default name, or specify as arg)
                     ['max_cuts', 'fill'],
@@ -99,6 +100,9 @@ def test_config(input_config: str) -> Dict:
         except yaml.YAMLError as exc:
             print(exc)
 
+    print(set([i for i in config.keys() if 'param' not in i]) - set([item[0] for item in CONFIG_STRUCTURE]))
+    assert len( set([i for i in config.keys() if 'param' not in i]) - set([item[0] for item in CONFIG_STRUCTURE])) <=0 # todo finish this with print
+
     # check non parameters settings
     for key, value in config.items():
         # check directories
@@ -159,6 +163,7 @@ def test_config(input_config: str) -> Dict:
 
     if 'multitask' in config and  config ['multitask']  and config ['descriptors_type'] != "MPNN_fingerprint":
         print( "Note, parameter 'multitask' is ignored (has no effect) when models other than MPNN are used.")
+
 
 
     acceptable_descr = [ 'sirms','MG2','AP','RDK','TT','bMG2','bAP','bRDK', 'MPNN_fingerprint']

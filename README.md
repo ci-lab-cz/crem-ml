@@ -4,7 +4,7 @@ CReM-ML: System for multi-objective optimization of small molecules properties
 Overview
 ----------
 Name *CReM-ML* is derived from  *CReM: Chemically reasonlble mutations* and *ML: machine learning*. The method is an iterative 
-compound optimizer based on ML models (QSAR) and employing Pareto-frontier or desirability-functions for compound selection.
+compound optimizer based on ML models (QSAR) and employing multiparameter optimization: MPO. We employ Pareto-frontier or desirability-functions for compound selection.
 The concept of  *XAI (explainable Artificial Intelligence)* is employed. Model explanations (a.k.a. model interpretation) allow to determine the influence of molecular 
 fragments on their properties. Based on these explanations molecules are modified by replacing certain fragments using pre-generated database. This (ideally) leads to molecules with improved properties.
 
@@ -17,8 +17,8 @@ The workflow consists of three parts, which  are repeated in a loop:
 Once the user has defined optimization goal - i.e. target values (ranges) of properties to be reached and desired number of compounds, the optimizer can be started.
 Preparation part performs testing of the input data, configuration file, and  setting up the environment.
 Compound part works with compounds: it optionally standardizes
-compounds, selects the most promising ones and checks whether some compounds match the goal criteria; then possibly the 
-optimization loop stops (if there is enough compounds satisfying specified values of properties).
+compounds, checks whether some compounds match the goal criteria; then possibly the 
+optimization loop stops (if there is enough compounds satisfying specified values of properties). Out of the rest of compounds, the most promising are selected for replacement stage using one of MPO approaches.
 Fragment part modifies compounds by  working with their fragments.
 It calculates fragments' contributions to target properties (called "parameters" in the configuration file) by means of XAI.
 Then, the program tests these fragments' contributions
@@ -238,7 +238,7 @@ intermediate files used for calculations in generations
 Building models before running CReM-ML
 --------------------------------------
 
-CReM-ML requires ready QSAR models  for propertes to be optimized. Compatible models are scikit-learn models and
+CReM-ML requires ready QSAR models  for properties to be optimized. Compatible models are scikit-learn models and
 Chemprop MPNN models (pytorch-based). 
 Scikit-learn models can be built using SPCI package using SPCI GUI:
 
