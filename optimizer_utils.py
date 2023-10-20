@@ -400,7 +400,6 @@ def predict_properties(parameters: List, descriptors_fname: str, output_format: 
 def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
                      smarts_string: str, max_cuts: int,
                      keep_stereo: bool, error_fname: str,
-                     only_heavy: bool = True,
                      verbose: bool=False) -> None:
     """
     Creates file with fragments from sdf file
@@ -420,7 +419,6 @@ def find_frags_rdkit(input_sdf_file: str, fragment_ids_file: str,
                                 query=smarts_string,
                                 max_cuts=max_cuts,
                                 radius = [0], # todo is it safe to hardcode this arg?
-                                only_heavy = only_heavy,
                                 keep_stereo = keep_stereo,
                                 verbose=verbose,
                                 error_fname=error_fname)

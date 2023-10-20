@@ -24,7 +24,6 @@ CONFIG_STRUCTURE = [['working_dir', 'path_to_output_dir'],
                     ['properties_chemaxon', 'fill'],  # 'charge logp acc don refractivity'
                     ['properties_sirms', 'fill'],  # 'CHARGE LOGP HB REFRACTIVITY'
                     ['smart_string', "'[#6+0;!$(*=,#[!#6])]!@!=!#[*]'"],
-                    ['only_heavy', "True or False"],
                     ['protected_ids', 'protected_ids'],
                     # field in seed sdf, containing atom ids that should not be touched by replacements (default name, or specify as arg)
                     ['max_cuts', 'fill'],

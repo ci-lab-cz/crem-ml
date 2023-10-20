@@ -216,8 +216,7 @@ def optimize(settings: Dict, input_config: str, brute_force: bool, number_genera
                                          settings['max_cuts'],
                                          # settings['radius'], # todo is it safe to not to use it at all?
                                          settings['keep_stereo'],
-                                         error_fname_frag,
-                                         settings['only_heavy']
+                                         error_fname_frag
                                          )
         if settings['descriptors_type'] == 'sirms':
             # calculate sirms descriptors of fragments
