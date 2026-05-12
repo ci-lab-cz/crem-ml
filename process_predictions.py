@@ -74,7 +74,7 @@ def save_output(input_sdf: str, out_fname: str, output_poll: pandas_table) -> No
     in_file.close()
 
 
-def prepare_working_arr(in_pred: List, parameters: List, bounding_box: bool, proba_consensus:bool=True) -> pandas_table:
+def prepare_working_arr(in_pred: List, parameters: List, bounding_box: bool, proba_consensus:bool=True, spci_models:bool=False) -> pandas_table:
     #  todo param proba_consensus should go to config, so regression recalculation will be avoided+bettertracking of run
     """
     Reads file with predictions and process it into pandas table
@@ -98,17 +98,34 @@ def prepare_working_arr(in_pred: List, parameters: List, bounding_box: bool, pro
             else:
                 table.drop(table[table.bound_box==0].index, inplace=True)
 
-        table.drop('bound_box', axis=1, inplace=True)
         if proba_consensus:
-            table.drop(table.columns[-1], axis=1, inplace=True)# drop  consensus
-            table['consensus']  = table.loc[:,['Compounds' not in i for i in  table.columns]].mean(axis=1) # get new consensus  # TODO: PP, why "consensus" was used? why not to remove the first column by index?
+            if 'consensus' in table.columns:
+                table.drop('consensus', axis=1, inplace=True)
+            model_cols = [c for c in table.columns if 'Compounds' not in str(c) and c != 'bound_box']
+            table['consensus']  = table[model_cols].mean(axis=1)
 
-        cols_to_drop = list(range(1,table.shape[1]-1)) # drop all but (new) consensus
-        table.drop(table.columns[cols_to_drop], axis=1, inplace=True)
-        table.rename(columns={table.columns[0]: 'id', 'consensus': parameter}, inplace=True)
+        cols_to_keep = [table.columns[0], 'consensus']
+        if spci_models and 'bound_box' in table.columns:
+            cols_to_keep.append('bound_box')
+            
+        cols_to_drop = [c for c in table.columns if c not in cols_to_keep]
+        table.drop(cols_to_drop, axis=1, inplace=True)
+        
+        rename_dict = {table.columns[0]: 'id', 'consensus': parameter}
+        if spci_models and 'bound_box' in table.columns:
+            rename_dict['bound_box'] = f'bound_box_{parameter}'
+            
+        table.rename(columns=rename_dict, inplace=True)
         table.set_index('id', inplace=True)
 
     tables = pd.concat(tables, axis=1, join='inner')
+    
+    if spci_models:
+        bb_cols = [col for col in tables.columns if str(col).startswith('bound_box_')]
+        if bb_cols:
+            # Bounding box is evaluated as the minimum (AND operation) across all SPCI models
+            tables['bounding_box'] = tables[bb_cols].min(axis=1).astype(int)
+            tables.drop(bb_cols, axis=1, inplace=True)
 
     # if ad
     if bounding_box:   # TODO: PP, this condition is not needed
@@ -139,7 +156,7 @@ def compute_distance_from_threshold(x: float, threshold: List) -> float:
 
 
 def update_database(out_database: str, predictions: pandas_table,
-                    output_filtering: pandas_table) -> None:
+                    output_filtering: pandas_table, spci_models: bool = False) -> None:
     """
     Updates predicted values for compounds in database.
 
@@ -148,11 +165,15 @@ def update_database(out_database: str, predictions: pandas_table,
     :param output_filtering: fitted compounds in table
     """
 
-    columns = predictions.columns
+    columns = [col for col in predictions.columns if col != 'bounding_box']
     database_columns = ["predicted_{}".format(cols) for cols in columns]
 
-    query = "UPDATE optimizer_table SET fit=?, "
-    query += "=?, ".join(database_columns) + "=? WHERE id=?"
+    if spci_models and 'bounding_box' in predictions.columns:
+        query = "UPDATE optimizer_table SET fit=?, "
+        query += "=?, ".join(database_columns) + "=?, bounding_box=? WHERE id=?"
+    else:
+        query = "UPDATE optimizer_table SET fit=?, "
+        query += "=?, ".join(database_columns) + "=? WHERE id=?"
 
     con = lite.connect(out_database)
     with con:
@@ -166,6 +187,10 @@ def update_database(out_database: str, predictions: pandas_table,
                 record.append(0)
             for col in columns:
                 record.append(row[col])
+                
+            if spci_models and 'bounding_box' in predictions.columns:
+                record.append(int(row['bounding_box']))
+                
             record.append(index)
 
             cursor.execute(query, tuple(record))
@@ -213,7 +238,7 @@ def get_norm_value(x_input: float, function: List) -> float:
 
 def main(in_sdf, in_pred, out_database, out_fname, parameters,
          optimization_method, thresholds, ad, desirabilities=None,
-         n_compounds=0, random_compounds=0, additive_agg = True, brute_force=False):
+         n_compounds=0, random_compounds=0, additive_agg = True, brute_force=False, spci_models=False):
     """
     Logic of algorithm:
     1. if brute force - save all compounds to out_fname.
@@ -241,11 +266,11 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
     print('Processing predictions ...')
 
     # process all predictions
-    predictions = prepare_working_arr(in_pred, parameters, ad)
+    predictions = prepare_working_arr(in_pred, parameters, ad, spci_models=spci_models)
 
     if ad and predictions is None:
         print('Compounds are not in ad. Calculating outside ad!')
-        predictions = prepare_working_arr(in_pred, parameters, False)
+        predictions = prepare_working_arr(in_pred, parameters, False, spci_models=spci_models)
 
     # check if brute_force is selected, then no selections
     if brute_force:
@@ -265,7 +290,7 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                                                                   threshold=threshold)
 
         # find compounds which are in threshold
-        output_filtering = distance_predictions[distance_predictions.apply(lambda x:  np.all(x<=0), axis=1)] # all parameteres within thres
+        output_filtering = distance_predictions[distance_predictions[parameters].apply(lambda x:  np.all(x<=0), axis=1)] # all parameteres within thres  
         output_filtering = predictions.loc[output_filtering.index].copy()
         if output_filtering.shape[0] > 0:
             save_output(
@@ -273,11 +298,11 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                 os.path.join(os.path.dirname(in_sdf), 'output_match.sdf'),
                 output_filtering
             )
-        update_database(out_database, prepare_working_arr(in_pred, parameters, False), output_filtering)
+        update_database(out_database, prepare_working_arr(in_pred, parameters, False, spci_models=spci_models), output_filtering, spci_models=spci_models)
 
         # calc random compounds needed number
         n_random = math.floor(n_compounds * random_compounds) #  will be used later
-        ids_not_in_thr = distance_predictions.apply(lambda x: np.any(x > 0), axis=1) # ids of compounds not in threshold
+        ids_not_in_thr = distance_predictions[parameters].apply(lambda x: np.any(x > 0), axis=1) # ids of compounds not in threshold
         # print(ids_not_in_thr)
 
         # if we have less or equal compounds in input sdf then we specified
@@ -312,9 +337,9 @@ def main(in_sdf, in_pred, out_database, out_fname, parameters,
                         apply(get_norm_value, function=function)
 
                 if additive_agg: # additive
-                    desirability_predictions['desirability'] = desirability_predictions.sum(axis=1)/(len(parameters))
+                    desirability_predictions['desirability'] = desirability_predictions[parameters].sum(axis=1)/(len(parameters))
                 else: # multiplicative
-                    desirability_predictions['desirability'] = desirability_predictions.product(axis=1)
+                    desirability_predictions['desirability'] = desirability_predictions[parameters].product(axis=1)
 
                 desirability_predictions = desirability_predictions.sort_values(by='desirability', ascending=False)
                 selected_compounds_index = predictions.loc[desirability_predictions.head(n_compounds).index].index
@@ -370,9 +395,12 @@ if __name__ == '__main__':
     parser.add_argument('-bf', '--brute_force', action='store_true', default=False,
                         help='use all compounds, no selections')
 
+    parser.add_argument('-spci', '--spci_models', action='store_true', default=False,
+                        help='if spci models are used')
+
     args = vars(parser.parse_args())
 
     main(args['in_sdf'], args['in_pred'], args['output_database'], args['out'],
          args['parameters'], args['methods'], args['thresholds'], args['ad'],
          args['desirabilities'], args['n_compounds'], args['random_compounds'],
-         args['brute_force'])
+         additive_agg=True, brute_force=args['brute_force'], spci_models=args['spci_models'])

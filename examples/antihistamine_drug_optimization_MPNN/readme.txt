@@ -1,5 +1,5 @@
 
-Please, download replacement databse and replace path in config file, line 15:
+Please, download replacement databse and replace path in config file:
 
 replacement_database:  examples/replacements02_sa2.db
 

@@ -153,7 +153,7 @@ or pareto (not both). Desirability ranks compounds according to desirability fun
  lead to these hydrogens being selected as worst fragments, because of 0 contributions.
 + max_cuts - number of maximum cuts used in fragmentation procedure (see RDKit.Chem.rdMMPA docs). Recommended is 1...3 cuts.
 + protected_ids - field name in sdf file (with structure(s) to be optimized), which contains 0-based ids of atoms,
-  that should not be affected by optimization. For instance, this could be an active scaffold which you  wish to retain.
+  that should not be affected by optimization. The format should be field name in SDF-file with the  seed molecule(s) containing a comma-separated 1-bassed atom ids. For instance, this could be an active scaffold which you  wish to retain.
 + replacement_database - path to database with interchangeable fragments.
   NOTE: If invalid database is supplied, no 
   compounds will be generated, and next steps can result in errors (without warning).
@@ -225,6 +225,8 @@ TT (topological torsion); or MPNN_fingerprint. Prefix b- means binary fingerprin
 
 Building models before running CReM-ML
 --------------------------------------
+
+**IMPORTANT:** SPCI models MUST be built using a training set SDF file with explicit hydrogens. This is critical because CReM-ML uses explicit hydrogens during the optimization process. Furthermore, for information regarding which descriptor types are eligible for use with SPCI and how they are encoded, please refer to the command line help message of `spci_descriptors` (or `descriptors.py`) in the SPCI package.
 
 CReM-ML requires ready QSAR models  for properties to be optimized. Compatible models are scikit-learn models and
 Chemprop MPNN models (pytorch-based). 

@@ -49,28 +49,42 @@ def save_output_poll(in_sdf: str, out_fname: str, output_poll: pandas_table) -> 
                             str(output_poll.loc[mol.GetProp('id'), col]))
             output.write(mol)
 
-def create_database(working_dir: str, parameter_to_optimize: List) -> str:
+def create_database(working_dir: str, parameter_to_optimize: List, spci_models: bool = False) -> str:
     """
     Define new database and save it to working_dir.
 
     :param working_dir: path to working directory, new db will be stored there
     :param parameter_to_optimize: list of all parameters
+    :param spci_models: bool specifying whether spci models are used (and thus bounding_box should be saved)
     :return: path_to_database
     """
     parameter_to_optimize = ["predicted_{}".format(parameter) for parameter in parameter_to_optimize]
     path_to_database = os.path.join(working_dir, 'output.db')
 
-    table_str = ("""CREATE TABLE optimizer_table(
-                    id TEXT NOT NULL,
-                    smi TEXT NOT NULL UNIQUE,
-                    mol_block TEXT NOT NULL UNIQUE,
-                    protected_ids TEXT NOT NULL,
-                    generation INTEGER NOT NULL,
-                    parent TEXT,
-                    transformation TEXT,
-                    fit INTEGER, """ +
-                 " REAL,".join(parameter_to_optimize) +
-                 " REAL)")
+    if spci_models:
+        table_str = ("""CREATE TABLE optimizer_table(
+                        id TEXT NOT NULL,
+                        smi TEXT NOT NULL UNIQUE,
+                        mol_block TEXT NOT NULL UNIQUE,
+                        protected_ids TEXT,
+                        generation INTEGER NOT NULL,
+                        parent TEXT,
+                        transformation TEXT,
+                        fit INTEGER, """ +
+                     " REAL,".join(parameter_to_optimize) +
+                     " REAL, bounding_box INTEGER)")
+    else:
+        table_str = ("""CREATE TABLE optimizer_table(
+                        id TEXT NOT NULL,
+                        smi TEXT NOT NULL UNIQUE,
+                        mol_block TEXT NOT NULL UNIQUE,
+                        protected_ids TEXT,
+                        generation INTEGER NOT NULL,
+                        parent TEXT,
+                        transformation TEXT,
+                        fit INTEGER, """ +
+                     " REAL,".join(parameter_to_optimize) +
+                     " REAL)")
 
     if os.path.isfile(path_to_database):
         os.remove(path_to_database)
@@ -176,7 +190,8 @@ def get_mols(database: str, gen: int = None, fields: list = None) -> list:
             mol = Chem.MolFromMolBlock(item[0], removeHs=False)
             if mol:
                 for field, value in zip(fields, item[1:]):
-                    mol.SetProp(field, value)
+                    if value is not None:
+                        mol.SetProp(field, value)
                 mols.append(mol)
     return mols
 

@@ -30,10 +30,13 @@ def optimize(settings: Dict, input_config: str, brute_force: bool) -> None:
 
     parameters_list_dicts = [settings[parameter] for parameter in settings if "param_" in parameter]
 
+    use_spci_models = settings['descriptors_type'] != "MPNN_fingerprint"
+
     # create database
     settings['output_database'] = optimizer_utils.create_database(
         settings['working_dir'],
-        [parameter['name'] for parameter in parameters_list_dicts]
+        [parameter['name'] for parameter in parameters_list_dicts],
+        use_spci_models
     )
 
     shutil.copyfile(input_config, os.path.join(settings['working_dir'], 'config.yaml'))
@@ -156,7 +159,8 @@ def optimize(settings: Dict, input_config: str, brute_force: bool) -> None:
             desirabilities,
             settings['number_of_selected_compounds'],
             settings['random_compounds_selection'],
-            brute_force
+            brute_force=brute_force,
+            spci_models=use_spci_models
         )
 
         # get num of fitted compounds
